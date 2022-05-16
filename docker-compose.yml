@@ -43,3 +43,4 @@ services:
     image: postgres
     environment:
       POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
