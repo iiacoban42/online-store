@@ -1,24 +1,9 @@
-import os
-import atexit
-
 from flask import Flask
-import psycopg2
-
+from db.database import *
+from db.models import *
 
 app = Flask("payment-service")
-
-db = psycopg2.connect(host=os.environ['POSTGRES_HOST'],
-                      port=int(os.environ['POSTGRES_PORT']),
-                      user=os.environ['POSTGRES_USER'],
-                      password=os.environ['POSTGRES_PASSWORD'],
-                      database=int(os.environ['POSTGRES_DB']))
-
-
-def close_db_connection():
-    db.close()
-
-
-atexit.register(close_db_connection)
+database = attempt_connect()
 
 
 @app.post('/create_user')
