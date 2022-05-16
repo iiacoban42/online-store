@@ -1,6 +1,5 @@
 from flask import Flask
-from db.database import *
-from db.models import *
+from database import *
 
 app = Flask("payment-service")
 database = attempt_connect()
@@ -8,7 +7,10 @@ database = attempt_connect()
 
 @app.post('/create_user')
 def create_user():
-    pass
+    new_user_id = database.create_user()
+    return {
+        "user_id": new_user_id
+    }
 
 
 @app.get('/find_user/<user_id>')

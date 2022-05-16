@@ -3,29 +3,11 @@ import sys
 import atexit
 import time
 
+from models import *
+from scripts import *
+
 import psycopg2
 
-create_script = """
-CREATE TABLE IF NOT EXISTS public.Users
-(
-    user_id bigint NOT NULL,
-    credit double precision NOT NULL,
-    CONSTRAINT Users_pkey PRIMARY KEY (user_id)
-);
-
-CREATE TABLE IF NOT EXISTS public.Payments
-(
-    user_id bigint NOT NULL,
-    order_id bigint NOT NULL,
-    amount double precision NOT NULL,
-    payed boolean NOT NULL,
-    CONSTRAINT Payments_pkey PRIMARY KEY (user_id, order_id),
-    CONSTRAINT Users_fk FOREIGN KEY (user_id)
-        REFERENCES public.Users (user_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-);
-"""
 
 
 class _DatabaseConnection:
@@ -41,9 +23,21 @@ class _DatabaseConnection:
     def _close_db_connection(self):
         self.db.close()
 
-    def _create_db(self):
-        self.db.cursor().execute(create_script)
+    def cursor(self):
+        return self.db.cursor()
+
+    def commit(self):
         self.db.commit()
+
+    def _create_db(self):
+        self.cursor().execute(create_script)
+        self.commit()
+
+    def create_user(self):
+        self.cursor().execute(user_insert_script)
+        new_user_id = self.cursor().fetchone()[0]
+        self.commit()
+        return new_user_id
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:
