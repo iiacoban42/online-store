@@ -34,8 +34,9 @@ class _DatabaseConnection:
         self.commit()
 
     def create_user(self):
-        self.cursor().execute(user_insert_script)
-        new_user_id = self.cursor().fetchone()[0]
+        cursor = self.cursor()
+        cursor.execute(user_insert_script)
+        new_user_id = cursor.fetchone()[0]
         self.commit()
         return new_user_id
 
