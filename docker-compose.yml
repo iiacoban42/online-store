@@ -40,5 +40,6 @@ services:
       - env/payment_redis.env
 
   payment-db:
-    image: redis:latest
-    command: redis-server --requirepass redis --maxmemory 512mb
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123

@@ -2,15 +2,16 @@ import os
 import atexit
 
 from flask import Flask
-import redis
+import psycopg2
 
 
 app = Flask("payment-service")
 
-db: redis.Redis = redis.Redis(host=os.environ['REDIS_HOST'],
-                              port=int(os.environ['REDIS_PORT']),
-                              password=os.environ['REDIS_PASSWORD'],
-                              db=int(os.environ['REDIS_DB']))
+db = psycopg2.connect(host=os.environ['POSTGRES_HOST'],
+                      port=int(os.environ['POSTGRES_PORT']),
+                      user=os.environ['POSTGRES_USER'],
+                      password=os.environ['POSTGRES_PASSWORD'],
+                      database=int(os.environ['POSTGRES_DB']))
 
 
 def close_db_connection():
