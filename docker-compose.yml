@@ -18,8 +18,10 @@ services:
       - env/order_redis.env
 
   order-db:
-    image: redis:latest
-    command: redis-server --requirepass redis --maxmemory 512mb
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
 
   stock-service:
     build: ./stock

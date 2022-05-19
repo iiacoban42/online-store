@@ -1,26 +1,8 @@
-import os
-import atexit
-
 from flask import Flask
-import redis
-
-
-gateway_url = os.environ['GATEWAY_URL']
+from database import *
 
 app = Flask("order-service")
-
-db: redis.Redis = redis.Redis(host=os.environ['REDIS_HOST'],
-                              port=int(os.environ['REDIS_PORT']),
-                              password=os.environ['REDIS_PASSWORD'],
-                              db=int(os.environ['REDIS_DB']))
-
-
-def close_db_connection():
-    db.close()
-
-
-atexit.register(close_db_connection)
-
+database = attempt_connect()
 
 @app.post('/create/<user_id>')
 def create_order(user_id):
