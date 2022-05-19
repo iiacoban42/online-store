@@ -29,14 +29,18 @@ class _DatabaseConnection:
 
     def _create_db(self):
         self.cursor().execute(create_script)
+        self.cursor().execute(user_insert_script)
+        self.cursor().execute(user_insert_script)
         self.commit()
 
-    def create_user(self):
+    def create_order(self, user_id):
         cursor = self.cursor()
-        cursor.execute(user_insert_script)
-        new_user_id = cursor.fetchone()[0]
+        cursor.execute( f"INSERT INTO public.\"Orders\" "
+                        f"(paid, items, user_id, total_cost) "
+                        f"VALUES (FALSE, '{{}}', {user_id}, 0) RETURNING order_id;")
+        new_order_id = cursor.fetchone()[0]
         self.commit()
-        return new_user_id
+        return new_order_id
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:
