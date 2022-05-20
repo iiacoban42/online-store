@@ -24,6 +24,8 @@ services:
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
+    # ports:
+    # - 5432:5432
 
   stock-service:
     build: ./stock

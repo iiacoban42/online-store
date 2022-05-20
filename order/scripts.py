@@ -1,20 +1,18 @@
 create_script = """
 CREATE TABLE IF NOT EXISTS public.\"Users\"
 (
-    user_id SERIAL,
-    credit double precision NOT NULL DEFAULT 0,
-    CONSTRAINT Users_pkey PRIMARY KEY (user_id)
+    user_id SERIAL PRIMARY KEY,
+    credit double precision NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS public.\"Orders\"
 (
-    order_id SERIAL,
+    order_id SERIAL PRIMARY KEY,
     paid boolean NOT NULL,
     items int[] NOT NULL,
     user_id int NOT NULL,
     total_cost double precision NOT NULL,
-    
-    CONSTRAINT Orders_pkey PRIMARY KEY (order_id, user_id),
+
     CONSTRAINT Users_fk FOREIGN KEY (user_id)
         REFERENCES public.\"Users\" (user_id) MATCH SIMPLE
         ON UPDATE NO ACTION

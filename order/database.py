@@ -36,8 +36,8 @@ class _DatabaseConnection:
     def create_order(self, user_id):
         cursor = self.cursor()
         cursor.execute( f"INSERT INTO public.\"Orders\" "
-                        f"(paid, items, user_id, total_cost) "
-                        f"VALUES (FALSE, '{{}}', {user_id}, 0) RETURNING order_id;")
+                        f"(order_id, paid, items, user_id, total_cost) "
+                        f"VALUES (DEFAULT, FALSE, '{{}}', {user_id}, 0) RETURNING order_id;")
         new_order_id = cursor.fetchone()[0]
         self.commit()
         return new_order_id

@@ -4,7 +4,7 @@ from database import *
 app = Flask("order-service")
 database = attempt_connect()
 
-@app.route('/')
+@app.get('/hello')
 def hello_world():
     return "<p>Hello, World!</p>"
 
