@@ -28,7 +28,8 @@ class _DatabaseConnection:
         self.db.commit()
 
     def _create_db(self):
-        self.cursor().execute(create_script)
+        self.cursor().execute(create_users_table)
+        self.cursor().execute(create_orders_table)
         self.cursor().execute(user_insert_script)
         self.cursor().execute(user_insert_script)
         self.commit()
@@ -41,6 +42,19 @@ class _DatabaseConnection:
         new_order_id = cursor.fetchone()[0]
         self.commit()
         return new_order_id
+
+    def remove_order(self, order_id):
+        cursor = self.cursor()
+        cursor.execute( f"DELETE FROM public.\"Orders\" WHERE order_id = {order_id};")
+        self.commit()
+
+    def find_order(self, order_id):
+        cursor = self.cursor()
+        cursor.execute( f"SELECT * FROM public.\"Orders\" WHERE order_id = {order_id};")
+        order = cursor.fetchone()
+        self.commit()
+        return order
+
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:

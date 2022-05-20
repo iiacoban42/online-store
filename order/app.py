@@ -18,7 +18,7 @@ def create_order(user_id):
 
 @app.delete('/remove/<order_id>')
 def remove_order(order_id):
-    pass
+    database.remove_order(order_id)
 
 
 @app.post('/addItem/<order_id>/<item_id>')
@@ -33,7 +33,15 @@ def remove_item(order_id, item_id):
 
 @app.get('/find/<order_id>')
 def find_order(order_id):
-    pass
+    order = database.find_order(order_id)
+
+    return {
+        "order_id": order[0],
+        "paid": order[1],
+        "items": order[2],
+        "user_id": order[3],
+        "total_cost": order[4]
+    }
 
 
 @app.post('/checkout/<order_id>')

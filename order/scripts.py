@@ -1,10 +1,12 @@
-create_script = """
+create_users_table = """
 CREATE TABLE IF NOT EXISTS public.\"Users\"
 (
     user_id SERIAL PRIMARY KEY,
     credit double precision NOT NULL DEFAULT 0
 );
+"""
 
+create_orders_table = """
 CREATE TABLE IF NOT EXISTS public.\"Orders\"
 (
     order_id SERIAL PRIMARY KEY,
@@ -12,9 +14,8 @@ CREATE TABLE IF NOT EXISTS public.\"Orders\"
     items int[] NOT NULL,
     user_id int NOT NULL,
     total_cost double precision NOT NULL,
-
-    CONSTRAINT Users_fk FOREIGN KEY (user_id)
-        REFERENCES public.\"Users\" (user_id) MATCH SIMPLE
+    CONSTRAINT users_fk FOREIGN KEY(user_id)
+        REFERENCES public.\"Users\"(user_id)
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 );
