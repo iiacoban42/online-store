@@ -9,7 +9,6 @@ from scripts import *
 import psycopg2
 
 
-
 class _DatabaseConnection:
     def __init__(self):
         self.db = psycopg2.connect(host=os.environ['POSTGRES_HOST'],
@@ -39,6 +38,27 @@ class _DatabaseConnection:
         new_user_id = cursor.fetchone()[0]
         self.commit()
         return new_user_id
+
+    def find_user(self, user_id):
+        cursor = self.cursor()
+        cursor.execute(user_find_script, user_id)
+        user = cursor.fetchone()[0]
+        self.commit()
+        return user
+
+    def add_credit(self, user_id, amount):
+        cursor = self.cursor()
+        cursor.execute(user_add_credit_script, (amount, user_id))
+        user = cursor.fetchone()[0]
+        self.commit()
+        return user
+
+    def remove_credit(self, user_id, amount):
+        cursor = self.cursor()
+        cursor.execute(user_remove_credit_script, (amount, user_id))
+        user = cursor.fetchone()[0]
+        self.commit()
+        return user
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:

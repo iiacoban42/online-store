@@ -15,17 +15,22 @@ def create_user():
 
 @app.get('/find_user/<user_id>')
 def find_user(user_id: str):
-    pass
+    user = database.find_user(user_id)
+    return {
+        "user_id": user.user_id,
+        "credit": user.credit,
+    }
 
 
 @app.post('/add_funds/<user_id>/<amount>')
 def add_credit(user_id: str, amount: int):
-    pass
+    database.add_credit(user_id, amount)
+    return "Success"
 
 
 @app.post('/pay/<user_id>/<order_id>/<amount>')
 def remove_credit(user_id: str, order_id: str, amount: int):
-    pass
+    return "Success"
 
 
 @app.post('/cancel/<user_id>/<order_id>')
