@@ -12,4 +12,4 @@ RUN apt-get update \
 
 COPY . .
 
-EXPOSE 5000
+EXPOSE 5001

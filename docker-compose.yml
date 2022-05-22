@@ -16,17 +16,25 @@ services:
     command: gunicorn -b 0.0.0.0:5000 app:app
     env_file:
       - env/order_redis.env
+    ports:
+    - 5000:5000
 
   order-db:
-    image: redis:latest
-    command: redis-server --requirepass redis --maxmemory 512mb
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    # ports:
+    # - 5432:5432
 
   stock-service:
     build: ./stock
     image: stock:latest
-    command: gunicorn -b 0.0.0.0:5000 app:app
+    command: gunicorn -b 0.0.0.0:5002 app:app
     env_file:
       - env/stock_redis.env
+    ports:
+      - 5002:5002
 
   stock-db:
     image: redis:latest
@@ -35,9 +43,11 @@ services:
   payment-service:
     build: ./payment
     image: user:latest
-    command: gunicorn -b 0.0.0.0:5000 app:app
+    command: gunicorn -b 0.0.0.0:5001 app:app
     env_file:
       - env/payment_redis.env
+    ports:
+      - 5001:5001
 
   payment-db:
     image: postgres
