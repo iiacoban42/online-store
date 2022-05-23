@@ -30,14 +30,28 @@ def add_credit(user_id: str, amount: int):
 
 @app.post('/pay/<user_id>/<order_id>/<amount>')
 def remove_credit(user_id: str, order_id: str, amount: int):
-    return "Success"
+    user = database.find_user(user_id)
+    if user.credit >= amount:
+        new_payment = database.create_payment(user_id, order_id, amount)
+        database.remove_credit(user_id, amount)
+        return {
+            "Success": new_payment
+        }
+    return "User not enough credit", 400
 
 
 @app.post('/cancel/<user_id>/<order_id>')
 def cancel_payment(user_id: str, order_id: str):
-    pass
+    payment = database.find_payment(user_id, order_id)
+    if payment is None:
+        return "Payment not found", 400
+    database.add_credit(user_id, payment.amount)
+    return "Success"
 
 
 @app.post('/status/<user_id>/<order_id>')
 def payment_status(user_id: str, order_id: str):
-    pass
+    payment = database.find_payment(user_id, order_id)
+    return {
+        "Paid": True if payment is not None else False
+    }

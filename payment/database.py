@@ -49,16 +49,30 @@ class _DatabaseConnection:
     def add_credit(self, user_id, amount):
         cursor = self.cursor()
         cursor.execute(user_add_credit_script, (amount, user_id))
-        user = cursor.fetchone()[0]
+        res = cursor.fetchone()[0]
         self.commit()
-        return user
+        return res
 
     def remove_credit(self, user_id, amount):
         cursor = self.cursor()
         cursor.execute(user_remove_credit_script, (amount, user_id))
-        user = cursor.fetchone()[0]
+        res = cursor.fetchone()[0]
         self.commit()
-        return user
+        return res
+
+    def create_payment(self, user_id: str, order_id: str, amount: int):
+        cursor = self.cursor()
+        cursor.execute(payment_insert_script, (user_id, order_id, amount))
+        new_payment = cursor.fetchone()[0]
+        self.commit()
+        return new_payment
+
+    def find_payment(self, user_id, order_id):
+        cursor = self.cursor()
+        cursor.execute(payment_get_status_script, (user_id, order_id))
+        payment = cursor.fetchone()[0]
+        self.commit()
+        return payment
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:

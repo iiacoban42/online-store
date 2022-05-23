@@ -12,7 +12,6 @@ class Payment:
         self.user_id = user_id
         self.order_id = order_id
         self.amount = amount
-        self.payed = False
 
     def as_tuple(self):
-        return self.user_id, self.order_id, self.amount, self.payed
+        return self.user_id, self.order_id, self.amount
