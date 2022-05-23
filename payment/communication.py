@@ -28,7 +28,8 @@ class _Communicator:
 
     def start_listening(self):
         for msg in self._payment_consumer:
-            _id = msg["_id"]
+            print(msg)
+            _id = msg.value["_id"]
             # do stuff to handle thing
             self._payment_producer.send("payment_service_results", success(_id))
 

@@ -24,7 +24,7 @@ class _Communicator:
             client_id="order_service",
             value_deserializer=lambda x: json.loads(x)
         )
-        self._payment_consumer.subscribe(["payment_requests_results"])
+        self._payment_consumer.subscribe(["payment_service_results"])
 
     def start_payment(self, _id, payment_request: PaymentRequest):
         self._payment_producer.send(

@@ -8,7 +8,7 @@ FAIL = 2
 
 def command(_id, command_number, obj=None):
     return {
-        "id": _id,
+        "_id": _id,
         "command": command_number,
         "obj": obj.__dict__ if obj is not None else None
     }

@@ -1,9 +1,11 @@
 from flask import Flask
 from database import *
+from coordinator import Coordinator
 
 
 app = Flask("order-service")
 database = attempt_connect()
+coordinator = Coordinator()
 
 
 def order_as_json(order):
@@ -53,4 +55,7 @@ def find_order(order_id):
 
 @app.post('/checkout/<order_id>')
 def checkout(order_id):
-    return "ok"
+    if coordinator.checkout(order_id):
+        return "success"
+    else:
+        return "fail"
