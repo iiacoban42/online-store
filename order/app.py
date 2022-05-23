@@ -1,8 +1,10 @@
 from flask import Flask
 from database import *
 
+
 app = Flask("order-service")
 database = attempt_connect()
+
 
 def order_as_json(order):
     return {
@@ -13,9 +15,11 @@ def order_as_json(order):
         "total_cost": order[4]
     }
 
+
 @app.get('/hello')
 def hello_world():
     return "<p>Hello, World!</p>"
+
 
 @app.post('/create/<user_id>')
 def create_order(user_id):
@@ -49,4 +53,4 @@ def find_order(order_id):
 
 @app.post('/checkout/<order_id>')
 def checkout(order_id):
-    pass
+    return "ok"

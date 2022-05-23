@@ -16,4 +16,4 @@ class Order:
         self.total_cost = total_cost
 
     def as_tuple(self):
-        return elf.order_id, self.paid, self.items, self.user_id, self.total_cost
+        return self.order_id, self.paid, self.items, self.user_id, self.total_cost
