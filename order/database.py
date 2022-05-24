@@ -36,38 +36,35 @@ class _DatabaseConnection:
 
     def create_order(self, user_id):
         cursor = self.cursor()
-        cursor.execute( f"INSERT INTO public.\"Orders\" "
-                        f"(order_id, paid, items, user_id, total_cost) "
-                        f"VALUES (DEFAULT, FALSE, '{{}}', {user_id}, 0) RETURNING order_id;")
+        cursor.execute(create_order_script, (user_id))
         new_order_id = cursor.fetchone()[0]
         self.commit()
         return self.find_order(new_order_id)
 
     def remove_order(self, order_id):
+        order = self.find_order(order_id)
         cursor = self.cursor()
-        cursor.execute( f"DELETE FROM public.\"Orders\" WHERE order_id = {order_id};")
+        cursor.execute(remove_order_script, (order_id,))
         self.commit()
-        return self.find_order(order_id)
+        return order
 
     def find_order(self, order_id):
         cursor = self.cursor()
-        cursor.execute( f"SELECT * FROM public.\"Orders\" WHERE order_id = {order_id};")
+        cursor.execute(find_order_script, (order_id,))
         order = cursor.fetchone()
         self.commit()
         return order
 
     def add_item(self, order_id, item_id):
         cursor = self.cursor()
-        cursor.execute( f"UPDATE public.\"Orders\" SET items = array_append(items, {item_id}) WHERE order_id = {order_id};")
+        cursor.execute(add_item_script, (item_id, order_id))
         self.commit()
-
         return self.find_order(order_id)
 
     def remove_item(self, order_id, item_id):
         cursor = self.cursor()
-        cursor.execute( f"UPDATE public.\"Orders\" SET items = array_remove(items, {item_id}) WHERE order_id = {order_id};")
+        cursor.execute(remove_item_script, (item_id, order_id))
         self.commit()
-
         return self.find_order(order_id)
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:
