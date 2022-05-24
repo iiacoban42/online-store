@@ -55,7 +55,9 @@ def find_order(order_id):
 
 @app.post('/checkout/<order_id>')
 def checkout(order_id):
-    if coordinator.checkout(order_id):
+    order = database.find_order(order_id)
+    print(order)
+    if coordinator.checkout(order_id, order[2], order[4]):
         return "success"
     else:
         return "fail"

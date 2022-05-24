@@ -42,37 +42,37 @@ class _DatabaseConnection:
     def find_user(self, user_id):
         cursor = self.cursor()
         cursor.execute(user_find_script, user_id)
-        user = cursor.fetchone()[0]
+        user = cursor.fetchone()
         self.commit()
-        return user
+        return User(user[0], user[1])
 
     def add_credit(self, user_id, amount):
         cursor = self.cursor()
         cursor.execute(user_add_credit_script, (amount, user_id))
-        res = cursor.fetchone()[0]
+        credit = cursor.fetchone()[0]
         self.commit()
-        return res
+        return credit
 
     def remove_credit(self, user_id, amount):
         cursor = self.cursor()
         cursor.execute(user_remove_credit_script, (amount, user_id))
-        res = cursor.fetchone()[0]
+        credit = cursor.fetchone()[0]
         self.commit()
-        return res
+        return credit
 
     def create_payment(self, user_id: str, order_id: str, amount: int):
         cursor = self.cursor()
         cursor.execute(payment_insert_script, (user_id, order_id, amount))
-        new_payment = cursor.fetchone()[0]
+        new_payment = cursor.fetchone()
         self.commit()
-        return new_payment
+        return Payment(user_id, order_id, new_payment[2])
 
     def find_payment(self, user_id, order_id):
         cursor = self.cursor()
         cursor.execute(payment_get_status_script, (user_id, order_id))
-        payment = cursor.fetchone()[0]
+        payment = cursor.fetchone()
         self.commit()
-        return payment
+        return Payment(user_id, order_id, payment[2])
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:
