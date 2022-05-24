@@ -17,7 +17,7 @@ services:
       - GATEWAY_URL=http://gateway:80
     command: gunicorn -b 0.0.0.0:5000 app:app
     env_file:
-      - env/order_redis.env
+      - env/order_service.env
     ports:
     - "5000:5000"
 
@@ -51,12 +51,13 @@ services:
     image: user:latest
     command: gunicorn -b 0.0.0.0:5001 app:app
     env_file:
-      - env/payment_redis.env
+      - env/payment_service.env
     ports:
       - "5001:5001"
 
   payment-db:
     image: postgres
+    command: postgres --max_prepared_transactions=100
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0

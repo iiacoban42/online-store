@@ -49,9 +49,7 @@ class _DatabaseConnection:
     def add_credit(self, user_id, amount):
         cursor = self.cursor()
         cursor.execute(user_add_credit_script, (amount, user_id))
-        credit = cursor.fetchone()[0]
         self.commit()
-        return credit
 
     def remove_credit(self, user_id, amount):
         cursor = self.cursor()
@@ -73,6 +71,20 @@ class _DatabaseConnection:
         payment = cursor.fetchone()
         self.commit()
         return Payment(user_id, order_id, payment[2])
+
+    def prepare_payment(self, xid, user_id, order_id, amount):
+        self.db.tpc_begin(xid)
+        cursor = self.cursor()
+        cursor.execute(payment_insert_script, (user_id, order_id, amount))
+        cursor.execute(user_remove_credit_script, (amount, user_id))
+        self.db.tpc_prepare()
+        self.db.reset()
+
+    def commit_transaction(self, xid):
+        self.db.tpc_commit(xid)
+
+    def rollback_transaction(self, xid):
+        self.db.tpc_rollback(xid)
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:

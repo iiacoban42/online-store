@@ -24,12 +24,18 @@ class _Communicator:
             client_id="order_service",
             value_deserializer=lambda x: json.loads(x)
         )
-        self._payment_consumer.subscribe(["payment_service_results"])
+        self._payment_consumer.subscribe([PAYMENT_RESULTS_TOPIC])
 
     def start_payment(self, _id, payment_request: PaymentRequest):
         self._payment_producer.send(
-            "payment_requests",
+            PAYMENT_REQUEST_TOPIC,
             value=command(_id, BEGIN_TRANSACTION, payment_request)
+        )
+
+    def commit_transaction(self, _id):
+        self._payment_producer.send(
+            PAYMENT_REQUEST_TOPIC,
+            value=command(_id, COMMIT_TRANSACTION)
         )
 
     def payment_results(self):

@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS public.\"Users\"
 (
     user_id SERIAL,
     credit double precision NOT NULL DEFAULT 0,
-    CONSTRAINT Users_pkey PRIMARY KEY (user_id)
+    CONSTRAINT Users_pkey PRIMARY KEY (user_id),
+    CONSTRAINT credit_positive CHECK ( credit >= 0 )
 );
 
 CREATE TABLE IF NOT EXISTS public.\"Payments\"

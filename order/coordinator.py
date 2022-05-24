@@ -10,11 +10,15 @@ import shared.communication as sc
 class Status(Flag):
     STARTED = 0
     ERROR = 1
-    PAYMENT_READY = 2
+    PAYMENT_PREPARED = 2
     PAYMENT_COMMITTED = 4
-    FINISHED = 8
-    STOCK_READY = 16
-    STOCK_COMMITTED = 32
+    STOCK_PREPARED = 8
+    STOCK_COMMITTED = 16
+    FINISHED = ~ERROR & PAYMENT_COMMITTED
+    READY_FOR_COMMIT = ~ERROR & PAYMENT_PREPARED & ~PAYMENT_COMMITTED
+
+    def has_flag(self, flag: Flag):
+        return self & flag == flag
 
 
 class Coordinator:
@@ -26,12 +30,29 @@ class Coordinator:
 
     def listen_results(self):
         for result in self.communicator.payment_results():
-            _id = result.value["_id"]
-            if result.value["res"] == sc.SUCCESS and self.running_requests[_id] & (
-                    Status.PAYMENT_READY | Status.STOCK_READY):
-                self.running_requests[_id] = self.running_requests[_id] | Status.FINISHED
-            elif result.value["res"] == sc.FAIL:
-                self.running_requests[_id] = self.running_requests[_id] | Status.ERROR
+            result_obj = result.value
+            _id = result_obj["_id"]
+            self.set_new_state(_id, result_obj)
+            self.do_next_action(_id)
+
+    def set_new_state(self, _id, res_obj):
+        result = res_obj["res"]
+        if result == sc.SUCCESS:
+            if res_obj["command"] == sc.BEGIN_TRANSACTION:
+                self.running_requests[_id] |= Status.PAYMENT_PREPARED
+            elif res_obj["command"] == sc.COMMIT_TRANSACTION:
+                self.running_requests[_id] |= Status.PAYMENT_COMMITTED
+        elif result == sc.FAIL:
+            self.running_requests[_id] |= Status.ERROR
+
+    def do_next_action(self, _id):
+        state = self.running_requests[_id]
+        if state.has_flag(Status.FINISHED):
+            return
+        if state.has_flag(Status.ERROR):
+            return  # TODO: ROLLBACK
+        if state.has_flag(Status.READY_FOR_COMMIT):
+            self.communicator.commit_transaction(_id)
 
     def checkout(self, order_id, user_id, amount):
         _id = str(uuid.uuid4())

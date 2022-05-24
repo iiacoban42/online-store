@@ -5,6 +5,9 @@ COMMIT_TRANSACTION = 3
 SUCCESS = 1
 FAIL = 2
 
+PAYMENT_REQUEST_TOPIC = "payment_requests"
+PAYMENT_RESULTS_TOPIC = "payment_results"
+
 
 def command(_id, command_number, obj=None):
     return {
@@ -14,10 +17,19 @@ def command(_id, command_number, obj=None):
     }
 
 
-def success(_id):
+def success(_id, command_number):
     return {
         "_id": _id,
+        "command": command_number,
         "res": SUCCESS
+    }
+
+
+def fail(_id, command_number):
+    return {
+        "_id": _id,
+        "command": command_number,
+        "res": FAIL
     }
 
 

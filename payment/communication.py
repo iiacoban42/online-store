@@ -1,11 +1,13 @@
 import sys
 import time
 
+import psycopg2
 from kafka3 import KafkaConsumer
 from kafka3 import KafkaProducer
 from kafka3.errors import NoBrokersAvailable
 
 from shared.communication import *
+from database import attempt_connect
 
 import json
 
@@ -24,14 +26,26 @@ class _Communicator:
             client_id="payment_service",
             value_deserializer=lambda x: json.loads(x)
         )
-        self._payment_consumer.subscribe(["payment_requests"])
+        self._payment_consumer.subscribe([PAYMENT_REQUEST_TOPIC])
+        self._db_connection = attempt_connect()
 
     def start_listening(self):
         for msg in self._payment_consumer:
-            print(msg)
-            _id = msg.value["_id"]
-            # do stuff to handle thing
-            self._payment_producer.send("payment_service_results", success(_id))
+            msg_value = msg.value
+            _id = msg_value["_id"]
+            msg_command = msg_value["command"]
+            try:
+                if msg_command == BEGIN_TRANSACTION:
+                    msg_obj = msg_value["obj"]
+                    self._db_connection.prepare_payment(_id, msg_obj["user_id"], msg_obj["order_id"], msg_obj["amount"])
+                if msg_command == COMMIT_TRANSACTION:
+                    self._db_connection.commit_transaction(_id)
+                if msg_command == ROLLBACK_TRANSACTION:
+                    self._db_connection.rollback_transaction(_id)
+                self._payment_producer.send(PAYMENT_RESULTS_TOPIC, success(_id, msg.value["command"]))
+            except psycopg2.Error as e:
+                print(e.pgerror)
+                self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
 
 
 def try_connect(retries=3, timeout=2000) -> _Communicator:
