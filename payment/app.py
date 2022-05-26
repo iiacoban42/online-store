@@ -1,50 +1,63 @@
-import os
-import atexit
+import threading
 
 from flask import Flask
-import redis
-
+from database import *
+import communication
 
 app = Flask("payment-service")
+database = attempt_connect()
+communicator = communication.try_connect()
 
-db: redis.Redis = redis.Redis(host=os.environ['REDIS_HOST'],
-                              port=int(os.environ['REDIS_PORT']),
-                              password=os.environ['REDIS_PASSWORD'],
-                              db=int(os.environ['REDIS_DB']))
-
-
-def close_db_connection():
-    db.close()
-
-
-atexit.register(close_db_connection)
+threading.Thread(target=lambda: communicator.start_listening()).start()
 
 
 @app.post('/create_user')
 def create_user():
-    pass
+    new_user_id = database.create_user()
+    return {
+        "user_id": new_user_id
+    }
 
 
 @app.get('/find_user/<user_id>')
 def find_user(user_id: str):
-    pass
+    user = database.find_user(user_id)
+    return {
+        "user_id": user.user_id,
+        "credit": user.credit,
+    }
 
 
 @app.post('/add_funds/<user_id>/<amount>')
 def add_credit(user_id: str, amount: int):
-    pass
+    database.add_credit(user_id, amount)
+    return "Success"
 
 
 @app.post('/pay/<user_id>/<order_id>/<amount>')
 def remove_credit(user_id: str, order_id: str, amount: int):
-    pass
+    user = database.find_user(user_id)
+    if user.credit >= amount:
+        new_payment = database.create_payment(user_id, order_id, amount)
+        database.remove_credit(user_id, amount)
+        return {
+            "Success": new_payment
+        }
+    return "User not enough credit", 400
 
 
 @app.post('/cancel/<user_id>/<order_id>')
 def cancel_payment(user_id: str, order_id: str):
-    pass
+    payment = database.find_payment(user_id, order_id)
+    if payment is None:
+        return "Payment not found", 400
+    database.add_credit(user_id, payment.amount)
+    return "Success"
 
 
 @app.post('/status/<user_id>/<order_id>')
 def payment_status(user_id: str, order_id: str):
-    pass
+    payment = database.find_payment(user_id, order_id)
+    return {
+        "Paid": True if payment is not None else False
+    }

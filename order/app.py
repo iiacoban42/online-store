@@ -1,52 +1,63 @@
-import os
-import atexit
-
 from flask import Flask
-import redis
+from database import *
+from coordinator import Coordinator
 
-
-gateway_url = os.environ['GATEWAY_URL']
 
 app = Flask("order-service")
-
-db: redis.Redis = redis.Redis(host=os.environ['REDIS_HOST'],
-                              port=int(os.environ['REDIS_PORT']),
-                              password=os.environ['REDIS_PASSWORD'],
-                              db=int(os.environ['REDIS_DB']))
+database = attempt_connect()
+coordinator = Coordinator()
 
 
-def close_db_connection():
-    db.close()
+def order_as_json(order):
+    return {
+        "order_id": order[0],
+        "paid": order[1],
+        "items": order[2],
+        "user_id": order[3],
+        "total_cost": order[4]
+    }
 
 
-atexit.register(close_db_connection)
+@app.get('/hello')
+def hello_world():
+    return "<p>Hello, World!</p>"
 
 
 @app.post('/create/<user_id>')
 def create_order(user_id):
-    pass
+    order = database.create_order(user_id)
+    return order_as_json(order)
 
 
 @app.delete('/remove/<order_id>')
 def remove_order(order_id):
-    pass
+    order = database.remove_order(order_id)
+    return order_as_json(order)
 
 
 @app.post('/addItem/<order_id>/<item_id>')
 def add_item(order_id, item_id):
-    pass
+    order = database.add_item(order_id, item_id)
+    return order_as_json(order)
 
 
 @app.delete('/removeItem/<order_id>/<item_id>')
 def remove_item(order_id, item_id):
-    pass
+    order = database.remove_item(order_id, item_id)
+    return order_as_json(order)
 
 
 @app.get('/find/<order_id>')
 def find_order(order_id):
-    pass
+    order = database.find_order(order_id)
+    return order_as_json(order)
 
 
 @app.post('/checkout/<order_id>')
 def checkout(order_id):
-    pass
+    #order = database.find_order(order_id)
+    #print(order)
+    if coordinator.checkout(1,1,1):
+        return "success"
+    else:
+        return "fail"
