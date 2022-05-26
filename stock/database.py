@@ -6,6 +6,8 @@ import time
 from models import *
 from scripts import *
 
+import collections
+
 import psycopg2
 
 class _DatabaseConnection:
@@ -33,7 +35,7 @@ class _DatabaseConnection:
 
     def create_item(self, item_price):
         cursor = self.cursor()
-        cursor.execute(insert_item_script, (item_price))
+        cursor.execute(insert_item_script, (item_price, ))
         new_item_id = cursor.fetchone()[0]
         self.commit()
         return new_item_id
@@ -41,7 +43,7 @@ class _DatabaseConnection:
 
     def find_item(self, item_id):
         cursor = self.cursor()
-        cursor.execute(find_item_script, item_id)
+        cursor.execute(find_item_script, (item_id, ))
         item = cursor.fetchone()
         self.commit()
         return Item(item[0], item[1], item[2])
@@ -59,6 +61,21 @@ class _DatabaseConnection:
         total_stock = cursor.fetchone()[0]
         self.commit()
         return total_stock
+
+    def calculate_cost(self, xid, item_ids):
+        self.db.tpc_begin(xid)
+        cursor = self.cursor()
+
+        counts = dict(collections.Counter(item_ids))
+        result = cursor.fetchall()
+
+        cost = 0
+        for tuple in result:
+            cost += counts[tuple[0]] * tuple[1]
+
+        self.db.tpc_prepare()
+        self.db.reset()
+        return cost
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:

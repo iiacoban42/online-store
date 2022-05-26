@@ -55,7 +55,7 @@ def cancel_payment(user_id: str, order_id: str):
     return "Success"
 
 
-@app.post('/status/<user_id>/<order_id>')
+@app.get('/status/<user_id>/<order_id>')
 def payment_status(user_id: str, order_id: str):
     payment = database.find_payment(user_id, order_id)
     return {

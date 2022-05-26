@@ -26,8 +26,6 @@ services:
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
-    # ports:
-    # - 5432:5432
 
   stock-service:
     build:
@@ -36,13 +34,16 @@ services:
     image: stock:latest
     command: gunicorn -b 0.0.0.0:5002 app:app
     env_file:
-      - env/stock_redis.env
+      - env/stock_service.env
     ports:
       - "5002:5002"
 
   stock-db:
-    image: redis:latest
-    command: redis-server --requirepass redis --maxmemory 512mb
+    image: postgres
+    command: postgres --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
 
   payment-service:
     build:

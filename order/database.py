@@ -28,10 +28,7 @@ class _DatabaseConnection:
         self.db.commit()
 
     def _create_db(self):
-        self.cursor().execute(create_users_table)
         self.cursor().execute(create_orders_table)
-        self.cursor().execute(user_insert_script)
-        self.cursor().execute(user_insert_script)
         self.commit()
 
     def create_order(self, user_id):
@@ -64,6 +61,12 @@ class _DatabaseConnection:
     def remove_item(self, order_id, item_id):
         cursor = self.cursor()
         cursor.execute(remove_item_script, (item_id, order_id))
+        self.commit()
+        return self.find_order(order_id)
+
+    def update_cost(self, order_id, cost):
+        cursor = self.cursor()
+        cursor.execute(update_cost_script, (cost, order_id))
         self.commit()
         return self.find_order(order_id)
 

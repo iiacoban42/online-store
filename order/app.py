@@ -50,14 +50,20 @@ def remove_item(order_id, item_id):
 @app.get('/find/<order_id>')
 def find_order(order_id):
     order = database.find_order(order_id)
-    return order_as_json(order)
+    item_ids = order_as_json(order)["items"]
+
+    cost = coordinator.find(item_ids)
+    updated_order = database.update_cost(order_id, cost)
+
+    return order_as_json(updated_order)
 
 
 @app.post('/checkout/<order_id>')
 def checkout(order_id):
-    #order = database.find_order(order_id)
-    #print(order)
-    if coordinator.checkout(1,1,1):
+    order = database.find_order(order_id)
+    order_json = order_as_json(order)
+
+    if coordinator.checkout(order_id, order_json["user_id"], order_json["total_cost"]):
         return "success"
     else:
         return "fail"
