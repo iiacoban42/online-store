@@ -122,4 +122,6 @@ class Coordinator:
                 return False
             if self.running_requests[_id] & Status.FINISHED:
                 return True
+            if self.running_requests[_id] & Status.STOCK_QUERIED:
+                return True
         return False
