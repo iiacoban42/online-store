@@ -66,11 +66,15 @@ class _DatabaseConnection:
         cursor = self.cursor()
 
         counts = dict(collections.Counter(item_ids))
+
+        # Temporary fix: doing a select * is a bad idea for scalability 
+        # TODO: change this
+        cursor.execute("SELECT * FROM public.\"Stock\"")
         result = cursor.fetchall()
 
         cost = 0
-        for tuple in result:
-            cost += counts[tuple[0]] * tuple[1]
+        for t in result:
+            cost += counts[t[0]] * t[1]
 
         self.db.tpc_prepare()
         self.db.reset()

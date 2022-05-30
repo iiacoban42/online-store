@@ -39,7 +39,6 @@ class _Communicator:
                     pass
                 if msg_command == REQUEST_COST:
                     msg_obj = msg_value["obj"]
-                    ###### error below
                     cost = self._db_connection.calculate_cost(_id, msg_obj["item_ids"])
                     self._stock_producer.send(STOCK_RESULTS_TOPIC, reply(_id, REPLY, cost))
                 if msg_command == COMMIT_TRANSACTION:

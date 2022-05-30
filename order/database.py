@@ -56,13 +56,11 @@ class _DatabaseConnection:
         cursor = self.cursor()
         cursor.execute(add_item_script, (item_id, order_id))
         self.commit()
-        return self.find_order(order_id)
 
     def remove_item(self, order_id, item_id):
         cursor = self.cursor()
         cursor.execute(remove_item_script, (item_id, order_id))
         self.commit()
-        return self.find_order(order_id)
 
     def update_cost(self, order_id, cost):
         cursor = self.cursor()

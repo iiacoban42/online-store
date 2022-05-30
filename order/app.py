@@ -18,11 +18,6 @@ def order_as_json(order):
     }
 
 
-@app.get('/hello')
-def hello_world():
-    return "<p>Hello, World!</p>"
-
-
 @app.post('/create/<user_id>')
 def create_order(user_id):
     order = database.create_order(user_id)
@@ -37,14 +32,14 @@ def remove_order(order_id):
 
 @app.post('/addItem/<order_id>/<item_id>')
 def add_item(order_id, item_id):
-    order = database.add_item(order_id, item_id)
-    return order_as_json(order)
+    database.add_item(order_id, item_id)
+    return find_order(order_id)
 
 
 @app.delete('/removeItem/<order_id>/<item_id>')
 def remove_item(order_id, item_id):
-    order = database.remove_item(order_id, item_id)
-    return order_as_json(order)
+    database.remove_item(order_id, item_id)
+    return find_order(order_id)
 
 
 @app.get('/find/<order_id>')
@@ -52,9 +47,11 @@ def find_order(order_id):
     order = database.find_order(order_id)
     item_ids = order_as_json(order)["items"]
 
-    cost = coordinator.find(item_ids)
-    updated_order = database.update_cost(order_id, cost)
+    cost = 0
+    if item_ids != []:
+        cost = coordinator.find(item_ids)
 
+    updated_order = database.update_cost(order_id, cost)
     return order_as_json(updated_order)
 
 
