@@ -40,9 +40,8 @@ def add_stock(item_id: str, amount: int):
 @app.post('/subtract/<item_id>/<amount>')
 def remove_stock(item_id: str, amount: int):
     item = database.find_item(item_id)
-    if item.stock >= amount:
+    if int(item.stock) >= int(amount):
         database.remove_stock(item_id, amount)
-        return {
-            "Success"
-        }
+        return "Success"
+
     return "Item not enough stock", 400

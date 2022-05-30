@@ -58,9 +58,8 @@ class _DatabaseConnection:
     def remove_stock(self, item_id, amount):
         cursor = self.cursor()
         cursor.execute(remove_item_stock_script, (amount, item_id))
-        total_stock = cursor.fetchone()[0]
         self.commit()
-        return total_stock
+
 
     def calculate_cost(self, xid, item_ids):
         self.db.tpc_begin(xid)
