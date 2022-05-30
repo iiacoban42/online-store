@@ -53,5 +53,6 @@ class PaymentRequest:
         self.amount = amount
 
 class StockRequest:
-    def __init__(self, item_ids):
+    def __init__(self, order_id, item_ids):
+        self.order_id = order_id
         self.item_ids = item_ids

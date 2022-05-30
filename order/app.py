@@ -33,13 +33,13 @@ def remove_order(order_id):
 @app.post('/addItem/<order_id>/<item_id>')
 def add_item(order_id, item_id):
     database.add_item(order_id, item_id)
-    return find_order(order_id)
+    return "success"
 
 
 @app.delete('/removeItem/<order_id>/<item_id>')
 def remove_item(order_id, item_id):
     database.remove_item(order_id, item_id)
-    return find_order(order_id)
+    return "success"
 
 
 @app.get('/find/<order_id>')
@@ -59,8 +59,20 @@ def find_order(order_id):
 def checkout(order_id):
     order = database.find_order(order_id)
     order_json = order_as_json(order)
+    item_ids = order_json["items"]
 
-    if coordinator.checkout(order_id, order_json["user_id"], order_json["total_cost"]):
+    payment_checkout =  coordinator.payment_checkout(order_id, order_json["user_id"], order_json["total_cost"])
+    stock_checkout = coordinator.stock_checkout(order_id, item_ids)
+
+    if payment_checkout:
+        order_json["paid"] = True
+        database.update_payment_status(order_id, True)
+
+    if payment_checkout and stock_checkout:
         return "success"
+    elif payment_checkout and not stock_checkout:
+        return "fail at stock"
+    elif not payment_checkout and stock_checkout:
+        return "fail at payment"
     else:
-        return "fail"
+        return "fail at both"

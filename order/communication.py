@@ -13,7 +13,6 @@ import json
 class _Communicator:
 
     def __init__(self):
-        self.cost = 0
         self._payment_producer = KafkaProducer(
             bootstrap_servers="kafka:9092",
             client_id="order_service",
@@ -66,8 +65,11 @@ class _Communicator:
     def stock_results(self):
         return self._stock_consumer
 
-    def return_cost(self):
-        return self.cost
+    def remove_stock(self, _id, stock_request: StockRequest):
+        self._stock_producer.send(
+            STOCK_REQUEST_TOPIC,
+            value=command(_id, BEGIN_TRANSACTION, stock_request)
+        )
 
 def try_connect(retries=3, timeout=2000) -> _Communicator:
     while retries > 0:

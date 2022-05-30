@@ -11,6 +11,8 @@ from database import attempt_connect
 
 import json
 
+import collections
+
 
 class _Communicator:
 
@@ -36,7 +38,11 @@ class _Communicator:
             msg_command = msg_value["command"]
             try:
                 if msg_command == BEGIN_TRANSACTION:
-                    pass
+                    msg_obj = msg_value["obj"]
+                    item_ids = msg_obj["item_ids"]
+                    counts = dict(collections.Counter(item_ids))
+                    for i in counts:
+                        self._db_connection.remove_stock(_id, i, counts[i])
                 if msg_command == REQUEST_COST:
                     msg_obj = msg_value["obj"]
                     cost = self._db_connection.calculate_cost(_id, msg_obj["item_ids"])

@@ -67,9 +67,7 @@ class _DatabaseConnection:
 
         counts = dict(collections.Counter(item_ids))
 
-        # Temporary fix: doing a select * is a bad idea for scalability 
-        # TODO: change this
-        cursor.execute("SELECT * FROM public.\"Stock\"")
+        cursor.execute(calculate_cost_script, (tuple(i for i in item_ids),))
         result = cursor.fetchall()
 
         cost = 0

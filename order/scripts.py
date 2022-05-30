@@ -23,3 +23,5 @@ add_item_script = "UPDATE public.\"Orders\" SET items = array_append(items, %s) 
 remove_item_script = "UPDATE public.\"Orders\" SET items = array_remove(items, %s) WHERE order_id = %s;"
 
 update_cost_script = "UPDATE public.\"Orders\" SET total_cost = %s WHERE order_id = %s;"
+
+update_payment_status_script = "UPDATE public.\"Orders\" SET paid = %s WHERE order_id = %s;"

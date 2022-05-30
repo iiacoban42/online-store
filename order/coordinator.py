@@ -24,7 +24,7 @@ class Status(Flag):
 
 class Coordinator:
     def __init__(self):
-        self.stock_value = 1111111
+        self.stock_value = 0
         self.communicator = communication.try_connect(timeout=5000)
         self.running_requests = {}
 
@@ -102,15 +102,22 @@ class Coordinator:
     def find(self, item_ids):
         _id = str(uuid.uuid4())
         self.running_requests[_id] = Status.STARTED
-        self.communicator.request_cost(_id, sc.StockRequest(item_ids))
+        # dummy value for the order_id, since we don't use it in this case
+        self.communicator.request_cost(_id, sc.StockRequest(0, item_ids))
         if self.wait_result(_id):
             cost = self.stock_value
             return cost
 
-    def checkout(self, order_id, user_id, amount):
+    def payment_checkout(self, order_id, user_id, amount):
         _id = str(uuid.uuid4())
         self.running_requests[_id] = Status.STARTED
         self.communicator.start_payment(_id, sc.PaymentRequest(order_id, user_id, amount))
+        return self.wait_result(_id)
+
+    def stock_checkout(self, order_id, item_ids):
+        _id = str(uuid.uuid4())
+        self.running_requests[_id] = Status.STARTED
+        self.communicator.remove_stock(_id, sc.StockRequest(order_id, item_ids))
         return self.wait_result(_id)
 
     def wait_result(self, _id, timeout=5000):
