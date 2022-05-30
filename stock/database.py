@@ -60,6 +60,10 @@ class _DatabaseConnection:
         cursor.execute(remove_item_stock_script, (amount, item_id))
         self.commit()
 
+    def remove_stock_request(self, xid, item_id, amount):
+        self.db.tpc_begin(xid)
+        self.remove_stock(item_id, amount)
+
 
     def calculate_cost(self, xid, item_ids):
         self.db.tpc_begin(xid)

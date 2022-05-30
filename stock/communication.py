@@ -42,7 +42,7 @@ class _Communicator:
                     item_ids = msg_obj["item_ids"]
                     counts = dict(collections.Counter(item_ids))
                     for i in counts:
-                        self._db_connection.remove_stock(_id, i, counts[i])
+                        self._db_connection.remove_stock_request(_id, i, counts[i])
                 if msg_command == REQUEST_COST:
                     msg_obj = msg_value["obj"]
                     cost = self._db_connection.calculate_cost(_id, msg_obj["item_ids"])
