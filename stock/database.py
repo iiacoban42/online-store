@@ -46,25 +46,29 @@ class _DatabaseConnection:
         cursor.execute(find_item_script, (item_id, ))
         item = cursor.fetchone()
         self.commit()
-        return Item(item[0], item[1], item[2])
+        return item
 
 
     def add_stock(self, item_id, amount):
         cursor = self.cursor()
         cursor.execute(add_item_stock_script, (amount, item_id))
+        modified_item = cursor.fetchone()
         self.commit()
+        return modified_item
 
 
     def remove_stock(self, item_id, amount):
         cursor = self.cursor()
-        cursor.execute(remove_item_stock_script, (amount, item_id))
+        cursor.execute(remove_item_stock_script, (amount, item_id, amount))
+        modified_item = cursor.fetchone()
         self.commit()
+        return modified_item
+
 
     def remove_stock_request(self, xid, item_id, amount):
         self.db.tpc_begin(xid)
         cursor = self.cursor()
-        cursor.execute(remove_item_stock_script, (amount, item_id))
-        # self.commit()
+        cursor.execute(remove_item_stock_script, (amount, item_id, amount))
         self.db.tpc_prepare()
         self.db.reset()
 

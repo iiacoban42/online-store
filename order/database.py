@@ -55,12 +55,16 @@ class _DatabaseConnection:
     def add_item(self, order_id, item_id):
         cursor = self.cursor()
         cursor.execute(add_item_script, (item_id, order_id))
+        modified_order = cursor.fetchone()
         self.commit()
+        return modified_order
 
     def remove_item(self, order_id, item_id):
         cursor = self.cursor()
         cursor.execute(remove_item_script, (item_id, order_id))
+        modified_order = cursor.fetchone()
         self.commit()
+        return modified_order
 
     def update_cost(self, order_id, cost):
         cursor = self.cursor()

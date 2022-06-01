@@ -13,8 +13,8 @@ insert_item_script = "INSERT INTO public.\"Stock\" (item_id, price, stock) VALUE
 
 find_item_script = "SELECT * FROM public.\"Stock\" WHERE item_id = %s;"
 
-add_item_stock_script = "UPDATE public.\"Stock\" SET stock = stock + %s WHERE item_id = %s;"
+add_item_stock_script = "UPDATE public.\"Stock\" SET stock = stock + %s WHERE item_id = %s RETURNING item_id;"
 
-remove_item_stock_script = "UPDATE public.\"Stock\" SET stock = stock - %s WHERE item_id = %s;"
+remove_item_stock_script = "UPDATE public.\"Stock\" SET stock = stock - %s WHERE item_id = %s AND stock >= %s  RETURNING item_id;"
 
 calculate_cost_script = "SELECT item_id, price FROM public.\"Stock\" WHERE item_id IN %s;"

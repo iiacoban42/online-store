@@ -18,9 +18,9 @@ remove_order_script = "DELETE FROM public.\"Orders\" WHERE order_id = %s;"
 
 find_order_script = "SELECT * FROM public.\"Orders\" WHERE order_id = %s;"
 
-add_item_script = "UPDATE public.\"Orders\" SET items = array_append(items, %s) WHERE order_id = %s;"
+add_item_script = "UPDATE public.\"Orders\" SET items = array_append(items, %s) WHERE order_id = %s AND paid = FALSE RETURNING order_id;"
 
-remove_item_script = "UPDATE public.\"Orders\" SET items = array_remove(items, %s) WHERE order_id = %s;"
+remove_item_script = "UPDATE public.\"Orders\" SET items = array_remove(items, %s) WHERE order_id = %s AND paid = FALSE RETURNING order_id;"
 
 update_cost_script = "UPDATE public.\"Orders\" SET total_cost = %s WHERE order_id = %s;"
 
