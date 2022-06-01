@@ -15,8 +15,10 @@ class Status(Flag):
     STOCK_PREPARED = 8
     STOCK_COMMITTED = 16
     STOCK_QUERIED = 32
-    FINISHED = ~ERROR & PAYMENT_COMMITTED
-    READY_FOR_COMMIT = ~ERROR & PAYMENT_PREPARED & ~PAYMENT_COMMITTED
+    FINISHED_PAYMENT = ~ERROR & PAYMENT_COMMITTED
+    FINISHED_STOCK = ~ERROR & STOCK_COMMITTED
+    READY_FOR_COMMIT_PAYMENT = ~ERROR & PAYMENT_PREPARED & ~PAYMENT_COMMITTED
+    READY_FOR_COMMIT_STOCK = ~ERROR & STOCK_PREPARED & ~STOCK_COMMITTED
 
     def has_flag(self, flag: Flag):
         return self & flag == flag
@@ -50,12 +52,12 @@ class Coordinator:
 
     def do_next_action_payment(self, _id):
         state = self.running_requests[_id]
-        if state.has_flag(Status.FINISHED):
+        if state.has_flag(Status.FINISHED_PAYMENT):
             return
         if state.has_flag(Status.ERROR):
             return  # TODO: ROLLBACK
-        if state.has_flag(Status.READY_FOR_COMMIT):
-            self.communicator.commit_transaction(_id)
+        if state.has_flag(Status.READY_FOR_COMMIT_PAYMENT):
+            self.communicator.commit_transaction_payment(_id)
 
     def listen_results_stock(self):
         for result in self.communicator.stock_results():
@@ -83,21 +85,16 @@ class Coordinator:
         if state.has_flag(Status.STOCK_QUERIED):
             self.stock_value = value
             return
-        if state.has_flag(Status.FINISHED):
-            return
-        if state.has_flag(Status.ERROR):
-            return  # TODO: ROLLBACK
-        if state.has_flag(Status.READY_FOR_COMMIT):
-            self.communicator.commit_transaction(_id)
+        else: self.do_next_action_stock(_id)
 
     def do_next_action_stock(self, _id):
         state = self.running_requests[_id]
-        if state.has_flag(Status.FINISHED):
+        if state.has_flag(Status.FINISHED_STOCK):
             return
         if state.has_flag(Status.ERROR):
             return  # TODO: ROLLBACK
-        if state.has_flag(Status.READY_FOR_COMMIT):
-            self.communicator.commit_transaction(_id)
+        if state.has_flag(Status.READY_FOR_COMMIT_STOCK):
+            self.communicator.commit_transaction_stock(_id)
 
     def find(self, item_ids):
         _id = str(uuid.uuid4())
@@ -117,7 +114,7 @@ class Coordinator:
     def stock_checkout(self, order_id, item_ids):
         _id = str(uuid.uuid4())
         self.running_requests[_id] = Status.STARTED
-        self.communicator.remove_stock(_id, sc.StockRequest(order_id, item_ids))
+        self.communicator.start_remove_stock(_id, sc.StockRequest(order_id, item_ids))
         return self.wait_result(_id)
 
     def wait_result(self, _id, timeout=5000):
@@ -127,7 +124,9 @@ class Coordinator:
                 return False
             if self.running_requests[_id] & Status.ERROR:
                 return False
-            if self.running_requests[_id] & Status.FINISHED:
+            if self.running_requests[_id] & Status.FINISHED_PAYMENT:
+                return True
+            if self.running_requests[_id] & Status.FINISHED_STOCK:
                 return True
             if self.running_requests[_id] & Status.STOCK_QUERIED:
                 return True

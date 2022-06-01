@@ -62,7 +62,11 @@ class _DatabaseConnection:
 
     def remove_stock_request(self, xid, item_id, amount):
         self.db.tpc_begin(xid)
-        self.remove_stock(item_id, amount)
+        cursor = self.cursor()
+        cursor.execute(remove_item_stock_script, (amount, item_id))
+        # self.commit()
+        self.db.tpc_prepare()
+        self.db.reset()
 
 
     def calculate_cost(self, xid, item_ids):
@@ -81,6 +85,12 @@ class _DatabaseConnection:
         self.db.tpc_prepare()
         self.db.reset()
         return cost
+
+    def commit_transaction(self, xid):
+        self.db.tpc_commit(xid)
+
+    def rollback_transaction(self, xid):
+        self.db.tpc_rollback(xid)
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:

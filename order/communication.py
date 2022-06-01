@@ -47,7 +47,7 @@ class _Communicator:
             value=command(_id, BEGIN_TRANSACTION, payment_request)
         )
 
-    def commit_transaction(self, _id):
+    def commit_transaction_payment(self, _id):
         self._payment_producer.send(
             PAYMENT_REQUEST_TOPIC,
             value=command(_id, COMMIT_TRANSACTION)
@@ -65,10 +65,16 @@ class _Communicator:
     def stock_results(self):
         return self._stock_consumer
 
-    def remove_stock(self, _id, stock_request: StockRequest):
+    def start_remove_stock(self, _id, stock_request: StockRequest):
         self._stock_producer.send(
             STOCK_REQUEST_TOPIC,
             value=command(_id, BEGIN_TRANSACTION, stock_request)
+        )
+
+    def commit_transaction_stock(self, _id):
+        self._stock_producer.send(
+            STOCK_REQUEST_TOPIC,
+            value=command(_id, COMMIT_TRANSACTION)
         )
 
 def try_connect(retries=3, timeout=2000) -> _Communicator:
