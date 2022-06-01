@@ -18,30 +18,32 @@ def create_item(price: int):
     new_item_id = database.create_item(price)
     return {
         "item_id": new_item_id
-    }
+    }, 200
 
 
 @app.get('/find/<item_id>')
 def find_item(item_id: str):
     item = database.find_item(item_id)
+    if item is None:
+        return f"Item: {item_id} not found.", 400
     return {
-        "item_id": item.item_id,
-        "price": item.price,
-        "stock": item.stock
-    }
+        "item_id": item[0],
+        "price": item[1],
+        "stock": item[2]
+    }, 200
 
 
 @app.post('/add/<item_id>/<amount>')
 def add_stock(item_id: str, amount: int):
-    database.add_stock(item_id, amount)
-    return "Success"
+    if database.add_stock(item_id, amount) is None:
+        return f"Item {item_id} was not found.", 400
+
+    return f"Success. Added {amount} to item: {item_id}.", 200
 
 
 @app.post('/subtract/<item_id>/<amount>')
 def remove_stock(item_id: str, amount: int):
-    item = database.find_item(item_id)
-    if int(item.stock) >= int(amount):
-        database.remove_stock(item_id, amount)
-        return "Success"
+    if database.remove_stock(item_id, amount) is None:
+        return f"Cannot deduct {amount}, from {item_id}. Not enough stock, or item was not found.", 400
 
-    return "Item not enough stock", 400
+    return f"Success. Deducted {amount} from item: {item_id}.", 200
