@@ -31,3 +31,5 @@ user_remove_credit_script = "UPDATE public.\"Users\" SET credit = credit - %s WH
 payment_insert_script = "INSERT INTO public.\"Payments\" VALUES (%s, %s, %s);"
 
 payment_get_status_script = "SELECT * FROM public.\"Payments\" WHERE user_id = %s AND order_id = %s;"
+
+check_user_script = "SELECT COUNT(1) FROM public.\"Users\" WHERE user_id = %s;"
