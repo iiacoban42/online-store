@@ -27,7 +27,7 @@ class Status(Flag):
 class Coordinator:
     def __init__(self):
         self.stock_value = 0
-        self.found_items = []
+        self.available_stock = []
         self.communicator = communication.try_connect(timeout=5000)
         self.running_requests = {}
 
@@ -66,7 +66,7 @@ class Coordinator:
             _id = result_obj["_id"]
             self.set_new_state_stock(_id, result_obj)
             if "value" in result_obj.keys():
-                self.do_next_action_update_stock(_id, result_obj["value"], result_obj["found_items"])
+                self.do_next_action_update_stock(_id, result_obj["value"], result_obj["available_stock"])
             else: self.do_next_action_stock(_id)
 
     def set_new_state_stock(self, _id, res_obj):
@@ -81,11 +81,11 @@ class Coordinator:
         elif result == sc.FAIL:
             self.running_requests[_id] |= Status.ERROR
 
-    def do_next_action_update_stock(self, _id, value, found_items):
+    def do_next_action_update_stock(self, _id, value, available_stock):
         state = self.running_requests[_id]
         if state.has_flag(Status.STOCK_QUERIED):
             self.stock_value = value
-            self.found_items = found_items
+            self.available_stock = available_stock
             return
         else: self.do_next_action_stock(_id)
 
@@ -105,8 +105,8 @@ class Coordinator:
         self.communicator.request_cost(_id, sc.StockRequest(0, item_ids))
         if self.wait_result(_id):
             cost = self.stock_value
-            found_items = self.found_items
-            return cost, found_items
+            available_stock = self.available_stock
+            return cost, available_stock
 
     def payment_checkout(self, order_id, user_id, amount):
         _id = str(uuid.uuid4())

@@ -1,3 +1,4 @@
+import collections
 from flask import Flask
 from database import *
 from coordinator import Coordinator
@@ -56,22 +57,40 @@ def find_order(order_id):
         return f"Order {order_id} was not found", 400
 
     item_ids = order_as_json(order)["items"]
+    counts = dict(collections.Counter(item_ids))
 
     cost = 0
-    found_items = []
+    available_stock = []
     if item_ids != []:
-        cost, found_items = coordinator.find(item_ids)
+        cost, available_stock = coordinator.find(item_ids)
 
     updated_order = database.update_cost(order_id, cost)
 
-    # remove nonexisting items
-    if found_items != []: found_items.sort()
-    if item_ids != []: found_items.sort()
+    filtered_items = []
 
-    if found_items != item_ids:
-        updated_order = database.update_items(order_id, found_items)
+    items_out_of_stock_ids = []
+    items_out_of_stock_values = []
 
-    return order_as_json(updated_order), 200
+    for (item_id, stock) in available_stock:
+        # filter nonexisting items
+        filtered_items.extend([item_id] * counts[item_id])
+        # check if something is out of stock
+        if(stock < counts[item_id]):
+            items_out_of_stock_ids.append(item_id)
+            items_out_of_stock_values.append(stock)
+
+    if filtered_items != item_ids:
+        updated_order = database.update_items(order_id, filtered_items)
+
+    order_json = order_as_json(updated_order)
+
+    if items_out_of_stock_ids != []:
+        order_json["not_enough_stock"] = {
+        "items": items_out_of_stock_ids,
+        "available_stock": items_out_of_stock_values
+        }
+
+    return order_json, 200
 
 
 @app.post('/checkout/<order_id>')
@@ -96,8 +115,8 @@ def checkout(order_id):
     if payment_checkout and stock_checkout:
         return f"Success. Order {order_id} was placed.", 200
     elif payment_checkout and not stock_checkout:
-        return f"Stock service failed when attempting to place order {order_id}", 400
+        return f"Stock service failed when attempting to place order {order_id}.", 400
     elif not payment_checkout and stock_checkout:
-        return f"Payment service failed when attempting to place order {order_id}", 400
+        return f"Payment service failed when attempting to place order {order_id}.", 400
     else:
-        return f"Payment and Stock serviced failed when attempting to place order {order_id}", 400
+        return f"Payment and Stock serviced failed when attempting to place order {order_id}.", 400
