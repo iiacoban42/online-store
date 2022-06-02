@@ -15,6 +15,9 @@ class Status(Flag):
     STOCK_PREPARED = 8
     STOCK_COMMITTED = 16
     STOCK_QUERIED = 32
+    PAYMENT_QUERIED = 64
+    STOCK_QUERY_DONE = 128
+    PAYMENT_QUERY_DONE = 256
     FINISHED_PAYMENT = ~ERROR & PAYMENT_COMMITTED
     FINISHED_STOCK = ~ERROR & STOCK_COMMITTED
     READY_FOR_COMMIT_PAYMENT = ~ERROR & PAYMENT_PREPARED & ~PAYMENT_COMMITTED
@@ -27,6 +30,8 @@ class Status(Flag):
 class Coordinator:
     def __init__(self):
         self.stock_value = 0
+        self.available_stock = []
+        self.payment_value = False
         self.communicator = communication.try_connect(timeout=5000)
         self.running_requests = {}
 
@@ -38,7 +43,10 @@ class Coordinator:
             result_obj = result.value
             _id = result_obj["_id"]
             self.set_new_state_payment(_id, result_obj)
-            self.do_next_action_payment(_id)
+            if "value" in result_obj.keys():
+                self.do_next_action_update_payment(_id, result_obj["value"])
+            else:
+                self.do_next_action_payment(_id)
 
     def set_new_state_payment(self, _id, res_obj):
         result = res_obj["res"]
@@ -47,8 +55,19 @@ class Coordinator:
                 self.running_requests[_id] |= Status.PAYMENT_PREPARED
             elif res_obj["command"] == sc.COMMIT_TRANSACTION:
                 self.running_requests[_id] |= Status.PAYMENT_COMMITTED
+            elif res_obj["command"] == sc.REPLY:
+                self.running_requests[_id] |= Status.PAYMENT_QUERIED
         elif result == sc.FAIL:
             self.running_requests[_id] |= Status.ERROR
+
+    def do_next_action_update_payment(self, _id, value):
+        state = self.running_requests[_id]
+        if state.has_flag(Status.PAYMENT_QUERIED):
+            if value == 1:
+                self.payment_value = True
+                self.running_requests[_id] |= Status.PAYMENT_QUERY_DONE
+            return
+        else: self.do_next_action_payment(_id)
 
     def do_next_action_payment(self, _id):
         state = self.running_requests[_id]
@@ -65,7 +84,7 @@ class Coordinator:
             _id = result_obj["_id"]
             self.set_new_state_stock(_id, result_obj)
             if "value" in result_obj.keys():
-                self.do_next_action_update_stock(_id, result_obj["value"])
+                self.do_next_action_update_stock(_id, result_obj["value"], result_obj["obj"])
             else: self.do_next_action_stock(_id)
 
     def set_new_state_stock(self, _id, res_obj):
@@ -80,10 +99,12 @@ class Coordinator:
         elif result == sc.FAIL:
             self.running_requests[_id] |= Status.ERROR
 
-    def do_next_action_update_stock(self, _id, value):
+    def do_next_action_update_stock(self, _id, value, available_stock):
         state = self.running_requests[_id]
         if state.has_flag(Status.STOCK_QUERIED):
             self.stock_value = value
+            self.available_stock = available_stock
+            self.running_requests[_id] |= Status.STOCK_QUERY_DONE
             return
         else: self.do_next_action_stock(_id)
 
@@ -96,14 +117,25 @@ class Coordinator:
         if state.has_flag(Status.READY_FOR_COMMIT_STOCK):
             self.communicator.commit_transaction_stock(_id)
 
-    def find(self, item_ids):
+    def find_cost(self, item_ids):
         _id = str(uuid.uuid4())
         self.running_requests[_id] = Status.STARTED
         # dummy value for the order_id, since we don't use it in this case
         self.communicator.request_cost(_id, sc.StockRequest(0, item_ids))
         if self.wait_result(_id):
             cost = self.stock_value
-            return cost
+            available_stock = self.available_stock
+            return cost, available_stock
+
+    def find_user(self, user_id):
+        _id = str(uuid.uuid4())
+        self.running_requests[_id] = Status.STARTED
+        # dummy values for the order_id and amount, since we don't use them in this case
+        self.communicator.request_user(_id, sc.PaymentRequest(0, user_id, 0))
+        if self.wait_result(_id):
+            user_exists = self.payment_value
+            return user_exists
+
 
     def payment_checkout(self, order_id, user_id, amount):
         _id = str(uuid.uuid4())
@@ -128,6 +160,8 @@ class Coordinator:
                 return True
             if self.running_requests[_id] & Status.FINISHED_STOCK:
                 return True
-            if self.running_requests[_id] & Status.STOCK_QUERIED:
+            if self.running_requests[_id] & Status.STOCK_QUERY_DONE:
+                return True
+            if self.running_requests[_id] & Status.PAYMENT_QUERY_DONE:
                 return True
         return False

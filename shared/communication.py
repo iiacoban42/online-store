@@ -2,7 +2,8 @@ BEGIN_TRANSACTION = 1
 ROLLBACK_TRANSACTION = 2
 COMMIT_TRANSACTION = 3
 REQUEST_COST = 4
-REPLY = 5
+REQUEST_USER = 5
+REPLY = 10
 
 SUCCESS = 1
 FAIL = 2
@@ -37,12 +38,13 @@ def fail(_id, command_number):
         "res": FAIL
     }
 
-def reply(_id, command_number, value):
+def reply(_id, command_number, value, obj=None):
     return {
         "_id": _id,
         "command": command_number,
         "res": SUCCESS,
-        "value": value
+        "value": value,
+        "obj": obj
     }
 
 
