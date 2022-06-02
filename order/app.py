@@ -99,15 +99,18 @@ def find_order(order_id):
 
 @app.post('/checkout/<order_id>')
 def checkout(order_id):
-    order = database.find_order(order_id)
-    if order is None:
-        return f"Order {order_id} was not found. Cannot process checkout.", 400
+    order_json, code = find_order(order_id)
+    if code != 200:
+        return order_json, code
 
-    order_json = order_as_json(order)
     item_ids = order_json["items"]
 
     if item_ids == []:
         return f"Order {order_id} does not contain any items.", 400
+
+    if "not_enough_stock" in order_json:
+        items_out_of_stock = order_json["not_enough_stock"]["items"]
+        return f"Items: {items_out_of_stock} do not have enough stock available.", 400
 
     payment_checkout =  coordinator.payment_checkout(order_id, order_json["user_id"], order_json["total_cost"])
     stock_checkout = coordinator.stock_checkout(order_id, item_ids)
