@@ -37,12 +37,13 @@ def fail(_id, command_number):
         "res": FAIL
     }
 
-def reply(_id, command_number, value):
+def reply(_id, command_number, cost, items):
     return {
         "_id": _id,
         "command": command_number,
         "res": SUCCESS,
-        "value": value
+        "value": cost,
+        "found_items": items
     }
 
 

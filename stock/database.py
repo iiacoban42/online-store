@@ -82,13 +82,15 @@ class _DatabaseConnection:
         cursor.execute(calculate_cost_script, (tuple(i for i in item_ids),))
         result = cursor.fetchall()
 
+        found_items = []
         cost = 0
         for t in result:
+            found_items.append(t[0])
             cost += counts[t[0]] * t[1]
 
         self.db.tpc_prepare()
         self.db.reset()
-        return cost
+        return cost, found_items
 
     def commit_transaction(self, xid):
         self.db.tpc_commit(xid)

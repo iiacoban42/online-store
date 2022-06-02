@@ -35,9 +35,9 @@ def add_credit(user_id: str, amount: int):
 
 
 @app.post('/pay/<user_id>/<order_id>/<amount>')
-def remove_credit(user_id: str, order_id: str, amount: int):
+def remove_credit(user_id: str, order_id: str, amount: float):
     user = database.find_user(user_id)
-    if user.credit >= amount:
+    if float(user.credit) >= float(amount):
         new_payment = database.create_payment(user_id, order_id, amount)
         database.remove_credit(user_id, amount)
         return {

@@ -72,6 +72,12 @@ class _DatabaseConnection:
         self.commit()
         return self.find_order(order_id)
 
+    def update_items(self, order_id, items):
+        cursor = self.cursor()
+        cursor.execute(update_items_script, (items, order_id))
+        self.commit()
+        return self.find_order(order_id)
+
     def update_payment_status(self, order_id, status):
         cursor = self.cursor()
         cursor.execute(update_payment_status_script, (status, order_id))

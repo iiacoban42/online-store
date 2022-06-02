@@ -58,10 +58,19 @@ def find_order(order_id):
     item_ids = order_as_json(order)["items"]
 
     cost = 0
+    found_items = []
     if item_ids != []:
-        cost = coordinator.find(item_ids)
+        cost, found_items = coordinator.find(item_ids)
 
     updated_order = database.update_cost(order_id, cost)
+
+    # remove nonexisting items
+    if found_items != []: found_items.sort()
+    if item_ids != []: found_items.sort()
+
+    if found_items != item_ids:
+        updated_order = database.update_items(order_id, found_items)
+
     return order_as_json(updated_order), 200
 
 
