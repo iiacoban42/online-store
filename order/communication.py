@@ -53,6 +53,12 @@ class _Communicator:
             value=command(_id, COMMIT_TRANSACTION)
         )
 
+    def request_user(self, _id, payment_request: PaymentRequest):
+        self._payment_producer.send(
+            PAYMENT_REQUEST_TOPIC,
+            value=command(_id, REQUEST_USER, payment_request)
+        )
+
     def payment_results(self):
         return self._payment_consumer
 

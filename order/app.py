@@ -21,8 +21,12 @@ def order_as_json(order):
 
 @app.post('/create/<user_id>')
 def create_order(user_id):
-    order = database.create_order(user_id)
-    return order_as_json(order), 200
+    user_exists = coordinator.find_user(user_id)
+    if user_exists:
+        order = database.create_order(user_id)
+        return order_as_json(order), 200
+    else:
+        return f"User {user_id} was not found.", 400
 
 
 @app.delete('/remove/<order_id>')
@@ -62,7 +66,7 @@ def find_order(order_id):
     cost = 0
     available_stock = []
     if item_ids != []:
-        cost, available_stock = coordinator.find(item_ids)
+        cost, available_stock = coordinator.find_cost(item_ids)
 
     updated_order = database.update_cost(order_id, cost)
 
