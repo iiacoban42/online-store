@@ -34,14 +34,14 @@ class _DatabaseConnection:
     def create_order(self, user_id):
         cursor = self.cursor()
         cursor.execute(create_order_script, (user_id))
-        new_order_id = cursor.fetchone()[0]
+        order = cursor.fetchone()
         self.commit()
-        return self.find_order(new_order_id)
+        return order
 
     def remove_order(self, order_id):
-        order = self.find_order(order_id)
         cursor = self.cursor()
         cursor.execute(remove_order_script, (order_id,))
+        order = cursor.fetchone()
         self.commit()
         return order
 
@@ -69,20 +69,23 @@ class _DatabaseConnection:
     def update_cost(self, order_id, cost):
         cursor = self.cursor()
         cursor.execute(update_cost_script, (cost, order_id))
+        modified_order = cursor.fetchone()
         self.commit()
-        return self.find_order(order_id)
+        return modified_order
 
     def update_items(self, order_id, items):
         cursor = self.cursor()
         cursor.execute(update_items_script, (items, order_id))
+        modified_order = cursor.fetchone()
         self.commit()
-        return self.find_order(order_id)
+        return modified_order
 
     def update_payment_status(self, order_id, status):
         cursor = self.cursor()
         cursor.execute(update_payment_status_script, (status, order_id))
+        modified_order = cursor.fetchone()
         self.commit()
-        return self.find_order(order_id)
+        return modified_order
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:
     while retries > 0:

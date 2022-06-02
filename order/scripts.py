@@ -11,10 +11,10 @@ CREATE TABLE IF NOT EXISTS public.\"Orders\"
 
 create_order_script = """
 INSERT INTO public.\"Orders\" (order_id, paid, items, user_id, total_cost)
-VALUES (DEFAULT, FALSE, ARRAY[]::int[], %s, 0) RETURNING order_id;
+VALUES (DEFAULT, FALSE, ARRAY[]::int[], %s, 0) RETURNING *;
 """
 
-remove_order_script = "DELETE FROM public.\"Orders\" WHERE order_id = %s;"
+remove_order_script = "DELETE FROM public.\"Orders\" WHERE order_id = %s RETURNING *;"
 
 find_order_script = "SELECT * FROM public.\"Orders\" WHERE order_id = %s;"
 
@@ -22,8 +22,8 @@ add_item_script = "UPDATE public.\"Orders\" SET items = array_append(items, %s) 
 
 remove_item_script = "UPDATE public.\"Orders\" SET items = array_remove(items, %s) WHERE order_id = %s AND paid = FALSE RETURNING order_id;"
 
-update_cost_script = "UPDATE public.\"Orders\" SET total_cost = %s WHERE order_id = %s;"
+update_cost_script = "UPDATE public.\"Orders\" SET total_cost = %s WHERE order_id = %s RETURNING *;"
 
-update_items_script = "UPDATE public.\"Orders\" SET items = %s WHERE order_id = %s;"
+update_items_script = "UPDATE public.\"Orders\" SET items = %s WHERE order_id = %s RETURNING *;"
 
-update_payment_status_script = "UPDATE public.\"Orders\" SET paid = %s WHERE order_id = %s;"
+update_payment_status_script = "UPDATE public.\"Orders\" SET paid = %s WHERE order_id = %s RETURNING *;"
