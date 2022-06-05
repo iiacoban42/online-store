@@ -26,21 +26,62 @@ class _Communicator:
         )
         self._payment_consumer.subscribe([PAYMENT_RESULTS_TOPIC])
 
+        self._stock_producer = KafkaProducer(
+            bootstrap_servers="kafka:9092",
+            client_id="order_service",
+            value_serializer=lambda x: json.dumps(x).encode('utf-8')
+        )
+
+        self._stock_consumer = KafkaConsumer(
+            bootstrap_servers="kafka:9092",
+            client_id="order_service",
+            value_deserializer=lambda x: json.loads(x)
+        )
+        self._stock_consumer.subscribe([STOCK_RESULTS_TOPIC])
+
+
+
     def start_payment(self, _id, payment_request: PaymentRequest):
         self._payment_producer.send(
             PAYMENT_REQUEST_TOPIC,
             value=command(_id, BEGIN_TRANSACTION, payment_request)
         )
 
-    def commit_transaction(self, _id):
+    def commit_transaction_payment(self, _id):
         self._payment_producer.send(
             PAYMENT_REQUEST_TOPIC,
             value=command(_id, COMMIT_TRANSACTION)
         )
 
+    def request_user(self, _id, payment_request: PaymentRequest):
+        self._payment_producer.send(
+            PAYMENT_REQUEST_TOPIC,
+            value=command(_id, REQUEST_USER, payment_request)
+        )
+
     def payment_results(self):
         return self._payment_consumer
 
+    def request_cost(self, _id, stock_request: StockRequest):
+        self._stock_producer.send(
+            STOCK_REQUEST_TOPIC,
+            value=command(_id, REQUEST_COST, stock_request)
+        )
+
+    def stock_results(self):
+        return self._stock_consumer
+
+    def start_remove_stock(self, _id, stock_request: StockRequest):
+        self._stock_producer.send(
+            STOCK_REQUEST_TOPIC,
+            value=command(_id, BEGIN_TRANSACTION, stock_request)
+        )
+
+    def commit_transaction_stock(self, _id):
+        self._stock_producer.send(
+            STOCK_REQUEST_TOPIC,
+            value=command(_id, COMMIT_TRANSACTION)
+        )
 
 def try_connect(retries=3, timeout=2000) -> _Communicator:
     while retries > 0:

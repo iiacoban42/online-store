@@ -1,40 +1,49 @@
-import os
-import atexit
+import threading
 
 from flask import Flask
-import redis
+from database import *
+import communication
 
 
 app = Flask("stock-service")
 
-db: redis.Redis = redis.Redis(host=os.environ['REDIS_HOST'],
-                              port=int(os.environ['REDIS_PORT']),
-                              password=os.environ['REDIS_PASSWORD'],
-                              db=int(os.environ['REDIS_DB']))
+database = attempt_connect()
 
-
-def close_db_connection():
-    db.close()
-
-
-atexit.register(close_db_connection)
+communicator = communication.try_connect()
+threading.Thread(target=lambda: communicator.start_listening()).start()
 
 
 @app.post('/item/create/<price>')
 def create_item(price: int):
-    pass
+    new_item_id = database.create_item(price)
+    return {
+        "item_id": new_item_id
+    }, 200
 
 
 @app.get('/find/<item_id>')
 def find_item(item_id: str):
-    pass
+    item = database.find_item(item_id)
+    if item is None:
+        return f"Item: {item_id} not found.", 400
+    return {
+        "item_id": item[0],
+        "price": item[1],
+        "stock": item[2]
+    }, 200
 
 
 @app.post('/add/<item_id>/<amount>')
 def add_stock(item_id: str, amount: int):
-    pass
+    if database.add_stock(item_id, amount) is None:
+        return f"Item {item_id} was not found.", 400
+
+    return f"Success. Added {amount} to item: {item_id}.", 200
 
 
 @app.post('/subtract/<item_id>/<amount>')
 def remove_stock(item_id: str, amount: int):
-    pass
+    if database.remove_stock(item_id, amount) is None:
+        return f"Cannot deduct {amount}, from {item_id}. Not enough stock, or item was not found.", 400
+
+    return f"Success. Deducted {amount} from item: {item_id}.", 200
