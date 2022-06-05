@@ -58,7 +58,7 @@ class _DatabaseConnection:
         self.commit()
         return credit
 
-    def create_payment(self, user_id: str, order_id: str, amount: int):
+    def create_payment(self, user_id: str, order_id: str, amount: float):
         cursor = self.cursor()
         cursor.execute(payment_insert_script, (user_id, order_id, amount))
         new_payment = cursor.fetchone()

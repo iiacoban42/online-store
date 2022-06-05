@@ -1,6 +1,8 @@
 import threading
 
 from flask import Flask
+from psycopg2 import ProgrammingError, IntegrityError
+
 from database import *
 import communication
 
@@ -29,21 +31,26 @@ def find_user(user_id: str):
 
 
 @app.post('/add_funds/<user_id>/<amount>')
-def add_credit(user_id: str, amount: int):
+def add_credit(user_id: str, amount: float):
     database.add_credit(user_id, amount)
     return f"Added {amount} credits to user {user_id}.", 200
 
 
 @app.post('/pay/<user_id>/<order_id>/<amount>')
 def remove_credit(user_id: str, order_id: str, amount: float):
-    user = database.find_user(user_id)
-    if float(user.credit) >= float(amount):
-        new_payment = database.create_payment(user_id, order_id, amount)
+    try:
         database.remove_credit(user_id, amount)
-        return {
-            "Success": new_payment
-        }, 200
-    return f"User {user_id} does not have enough credit.", 400
+    except ProgrammingError as e:
+        print(e)
+        return f"User with id: {user_id} not found", 400
+    except IntegrityError as e:
+        print(e)
+        return f"Not enough funds", 400
+
+    new_payment = database.create_payment(user_id, order_id, amount)
+    return {
+        "Success": new_payment
+    }, 200
 
 
 @app.post('/cancel/<user_id>/<order_id>')
