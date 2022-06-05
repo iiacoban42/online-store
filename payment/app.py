@@ -57,7 +57,7 @@ def remove_credit(user_id: str, order_id: str, amount: float):
 def cancel_payment(user_id: str, order_id: str):
     payment = database.find_payment(user_id, order_id)
     if payment is None:
-        return f"Payment of order {order_id} not found.", 400
+        return f"Not found.", 404
     database.add_credit(user_id, payment.amount)
     return f"Payment of order {order_id} cancelled successfully.", 200
 
@@ -65,6 +65,8 @@ def cancel_payment(user_id: str, order_id: str):
 @app.get('/status/<user_id>/<order_id>')
 def payment_status(user_id: str, order_id: str):
     payment = database.find_payment(user_id, order_id)
+    if payment is None:
+        return "Not found.", 404
     return {
         "Paid": True if payment is not None else False
     }, 200
