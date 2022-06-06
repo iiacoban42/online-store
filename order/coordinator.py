@@ -65,9 +65,12 @@ class Coordinator:
         if state.has_flag(Status.PAYMENT_QUERIED):
             if value == 1:
                 self.payment_value = True
-                self.running_requests[_id] |= Status.PAYMENT_QUERY_DONE
+            elif value == 0:
+                self.payment_value = False
+            self.running_requests[_id] |= Status.PAYMENT_QUERY_DONE
             return
-        else: self.do_next_action_payment(_id)
+        else:
+            self.do_next_action_payment(_id)
 
     def do_next_action_payment(self, _id):
         state = self.running_requests[_id]
@@ -85,7 +88,8 @@ class Coordinator:
             self.set_new_state_stock(_id, result_obj)
             if "value" in result_obj.keys():
                 self.do_next_action_update_stock(_id, result_obj["value"], result_obj["obj"])
-            else: self.do_next_action_stock(_id)
+            else:
+                self.do_next_action_stock(_id)
 
     def set_new_state_stock(self, _id, res_obj):
         result = res_obj["res"]
@@ -106,7 +110,8 @@ class Coordinator:
             self.available_stock = available_stock
             self.running_requests[_id] |= Status.STOCK_QUERY_DONE
             return
-        else: self.do_next_action_stock(_id)
+        else:
+            self.do_next_action_stock(_id)
 
     def do_next_action_stock(self, _id):
         state = self.running_requests[_id]
@@ -135,7 +140,6 @@ class Coordinator:
         if self.wait_result(_id):
             user_exists = self.payment_value
             return user_exists
-
 
     def payment_checkout(self, order_id, user_id, amount):
         _id = str(uuid.uuid4())

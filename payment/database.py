@@ -41,9 +41,11 @@ class _DatabaseConnection:
 
     def find_user(self, user_id):
         cursor = self.cursor()
-        cursor.execute(user_find_script, user_id)
+        cursor.execute(user_find_script, (user_id, ))
         user = cursor.fetchone()
         self.commit()
+        if user is None:
+            return None
         return User(user[0], user[1])
 
     def add_credit(self, user_id, amount):
@@ -86,14 +88,11 @@ class _DatabaseConnection:
     def rollback_transaction(self, xid):
         self.db.tpc_rollback(xid)
 
-    def check_user(self, xid, user_id):
-        self.db.tpc_begin(xid)
+    def check_user(self, user_id):
         cursor = self.cursor()
         cursor.execute(check_user_script, (user_id, ))
         result = cursor.fetchone()[0]
-        self.db.tpc_prepare()
-        self.db.reset()
-
+        self.commit()
         return result
 
 

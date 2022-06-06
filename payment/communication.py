@@ -40,7 +40,7 @@ class _Communicator:
                     self._db_connection.prepare_payment(_id, msg_obj["user_id"], msg_obj["order_id"], msg_obj["amount"])
                 if msg_command == REQUEST_USER:
                     msg_obj = msg_value["obj"]
-                    result = self._db_connection.check_user(_id, msg_obj["user_id"])
+                    result = self._db_connection.check_user(msg_obj["user_id"])
                     self._payment_producer.send(PAYMENT_RESULTS_TOPIC, reply(_id, REPLY, result))
                 if msg_command == COMMIT_TRANSACTION:
                     self._db_connection.commit_transaction(_id)

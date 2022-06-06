@@ -24,6 +24,8 @@ def create_user():
 @app.get('/find_user/<user_id>')
 def find_user(user_id: str):
     user = database.find_user(user_id)
+    if user is None:
+        return "Not found.", 404
     return {
         "user_id": user.user_id,
         "credit": user.credit,
