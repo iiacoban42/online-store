@@ -86,15 +86,15 @@ class _DatabaseConnection:
     def rollback_transaction(self, xid):
         self.db.tpc_rollback(xid)
 
-    def check_user(self, xid, user_id):
-        self.db.tpc_begin(xid)
+    def check_user(self, user_id):
         cursor = self.cursor()
-        cursor.execute(check_user_script, (user_id, ))
+        cursor.execute(check_user_script, (user_id,))
         result = cursor.fetchone()[0]
-        self.db.tpc_prepare()
-        self.db.reset()
 
-        return result
+        if result == 1:
+            return True
+
+        return False
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:

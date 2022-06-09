@@ -1,6 +1,6 @@
 import collections
 import requests
-import ast
+import json
 from flask import Flask
 from database import *
 from coordinator import Coordinator
@@ -23,13 +23,20 @@ def order_as_json(order):
 
 @app.post('/create/<user_id>')
 def create_order(user_id):
-    # user_exists = coordinator.find_user(user_id)
-    user_exists = True
-    if user_exists:
-        order = database.create_order(user_id)
-        return order_as_json(order), 200
-    else:
-        return f"User {user_id} was not found.", 400
+    if user_id is not None:
+        request = "http://host.docker.internal:5001/check_user/" + user_id
+        response = requests.get(request)
+
+        content = response.content
+
+        content_as_dict = json.loads(content.decode('utf-8'))
+        user_exists = content_as_dict['user_exists']
+
+        if user_exists:
+            order = database.create_order(user_id)
+            return order_as_json(order), 200
+
+    return f"User {user_id} was not found.", 400
 
 
 @app.delete('/remove/<order_id>')
@@ -82,7 +89,7 @@ def find_order(order_id):
 
         content = response.content
 
-        content_as_dict = ast.literal_eval(content.decode('utf-8'))
+        content_as_dict = json.loads(content.decode('utf-8'))
         cost = content_as_dict['cost']
         available_stock = content_as_dict['available_stock']
 

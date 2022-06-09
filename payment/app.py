@@ -15,17 +15,17 @@ threading.Thread(target=lambda: communicator.start_listening()).start()
 def create_user():
     new_user_id = database.create_user()
     return {
-        "user_id": new_user_id
-    }, 200
+               "user_id": new_user_id
+           }, 200
 
 
 @app.get('/find_user/<user_id>')
 def find_user(user_id: str):
     user = database.find_user(user_id)
     return {
-        "user_id": user.user_id,
-        "credit": user.credit,
-    }, 200
+               "user_id": user.user_id,
+               "credit": user.credit,
+           }, 200
 
 
 @app.post('/add_funds/<user_id>/<amount>')
@@ -41,8 +41,8 @@ def remove_credit(user_id: str, order_id: str, amount: float):
         new_payment = database.create_payment(user_id, order_id, amount)
         database.remove_credit(user_id, amount)
         return {
-            "Success": new_payment
-        }, 200
+                   "Success": new_payment
+               }, 200
     return f"User {user_id} does not have enough credit.", 400
 
 
@@ -59,5 +59,13 @@ def cancel_payment(user_id: str, order_id: str):
 def payment_status(user_id: str, order_id: str):
     payment = database.find_payment(user_id, order_id)
     return {
-        "Paid": True if payment is not None else False
-    }, 200
+               "Paid": True if payment is not None else False
+           }, 200
+
+
+@app.get('/check_user/<user_id>/')
+def check_user(user_id: str):
+    user = database.check_user(user_id)
+    return {
+               "user_exists": user
+           }, 200
