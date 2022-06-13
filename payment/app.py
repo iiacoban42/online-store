@@ -51,7 +51,7 @@ def remove_credit(user_id: str, order_id: str, amount: float):
 
     new_payment = database.create_payment(user_id, order_id, amount)
     return {
-        "Success": new_payment
+        "Success": True
     }, 200
 
 
