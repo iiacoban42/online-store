@@ -10,6 +10,7 @@ import collections
 
 import psycopg2
 
+
 class _DatabaseConnection:
     def __init__(self):
         self.db = psycopg2.connect(host=os.environ['POSTGRES_HOST'],
@@ -21,7 +22,7 @@ class _DatabaseConnection:
         atexit.register(self._close_db_connection)
 
     def _close_db_connection(self):
-            self.db.close()
+        self.db.close()
 
     def cursor(self):
         return self.db.cursor()
@@ -35,19 +36,17 @@ class _DatabaseConnection:
 
     def create_item(self, item_price):
         cursor = self.cursor()
-        cursor.execute(insert_item_script, (item_price, ))
+        cursor.execute(insert_item_script, (item_price,))
         new_item_id = cursor.fetchone()[0]
         self.commit()
         return new_item_id
 
-
     def find_item(self, item_id):
         cursor = self.cursor()
-        cursor.execute(find_item_script, (item_id, ))
+        cursor.execute(find_item_script, (item_id,))
         item = cursor.fetchone()
         self.commit()
         return item
-
 
     def add_stock(self, item_id, amount):
         cursor = self.cursor()
@@ -56,14 +55,12 @@ class _DatabaseConnection:
         self.commit()
         return modified_item
 
-
     def remove_stock(self, item_id, amount):
         cursor = self.cursor()
         cursor.execute(remove_item_stock_script, (amount, item_id, amount))
         modified_item = cursor.fetchone()
         self.commit()
         return modified_item
-
 
     def remove_stock_request(self, xid, item_id, amount):
         self.db.tpc_begin(xid)
@@ -72,9 +69,8 @@ class _DatabaseConnection:
         self.db.tpc_prepare()
         self.db.reset()
 
+    def calculate_cost(self, item_ids):
 
-    def calculate_cost(self, xid, item_ids):
-        self.db.tpc_begin(xid)
         cursor = self.cursor()
 
         counts = dict(collections.Counter(item_ids))
@@ -88,8 +84,6 @@ class _DatabaseConnection:
             available_stock.append(tuple([t[0], t[2]]))
             cost += counts[t[0]] * t[1]
 
-        self.db.tpc_prepare()
-        self.db.reset()
         return cost, available_stock
 
     def commit_transaction(self, xid):

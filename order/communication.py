@@ -39,8 +39,6 @@ class _Communicator:
         )
         self._stock_consumer.subscribe([STOCK_RESULTS_TOPIC])
 
-
-
     def start_payment(self, _id, payment_request: PaymentRequest):
         self._payment_producer.send(
             PAYMENT_REQUEST_TOPIC,
@@ -53,20 +51,8 @@ class _Communicator:
             value=command(_id, COMMIT_TRANSACTION)
         )
 
-    def request_user(self, _id, payment_request: PaymentRequest):
-        self._payment_producer.send(
-            PAYMENT_REQUEST_TOPIC,
-            value=command(_id, REQUEST_USER, payment_request)
-        )
-
     def payment_results(self):
         return self._payment_consumer
-
-    def request_cost(self, _id, stock_request: StockRequest):
-        self._stock_producer.send(
-            STOCK_REQUEST_TOPIC,
-            value=command(_id, REQUEST_COST, stock_request)
-        )
 
     def stock_results(self):
         return self._stock_consumer
@@ -82,6 +68,7 @@ class _Communicator:
             STOCK_REQUEST_TOPIC,
             value=command(_id, COMMIT_TRANSACTION)
         )
+
 
 def try_connect(retries=3, timeout=2000) -> _Communicator:
     while retries > 0:

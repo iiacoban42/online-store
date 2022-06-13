@@ -4,7 +4,6 @@ from flask import Flask
 from database import *
 import communication
 
-
 app = Flask("stock-service")
 
 database = attempt_connect()
@@ -17,8 +16,8 @@ threading.Thread(target=lambda: communicator.start_listening()).start()
 def create_item(price: int):
     new_item_id = database.create_item(price)
     return {
-        "item_id": new_item_id
-    }, 200
+               "item_id": new_item_id
+           }, 200
 
 
 @app.get('/find/<item_id>')
@@ -27,10 +26,10 @@ def find_item(item_id: str):
     if item is None:
         return f"Item: {item_id} not found.", 400
     return {
-        "item_id": item[0],
-        "price": item[1],
-        "stock": item[2]
-    }, 200
+               "item_id": item[0],
+               "price": item[1],
+               "stock": item[2]
+           }, 200
 
 
 @app.post('/add/<item_id>/<amount>')
@@ -47,3 +46,16 @@ def remove_stock(item_id: str, amount: int):
         return f"Cannot deduct {amount}, from {item_id}. Not enough stock, or item was not found.", 400
 
     return f"Success. Deducted {amount} from item: {item_id}.", 200
+
+
+@app.get('/calculate_cost/<item_ids>')
+def calculate_cost(item_ids: str):
+    items = item_ids.split(",")
+    items = list(map(int, items))
+    cost, available_stock = database.calculate_cost(items)
+    if cost is None:
+        return f"Items: {item_ids} not found.", 400
+    return {
+               "cost": cost,
+               "available_stock": available_stock
+           }, 200

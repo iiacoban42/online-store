@@ -90,10 +90,13 @@ class _DatabaseConnection:
 
     def check_user(self, user_id):
         cursor = self.cursor()
-        cursor.execute(check_user_script, (user_id, ))
+        cursor.execute(check_user_script, (user_id,))
         result = cursor.fetchone()[0]
-        self.commit()
-        return result
+
+        if result == 1:
+            return True
+
+        return False
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:

@@ -17,8 +17,8 @@ threading.Thread(target=lambda: communicator.start_listening()).start()
 def create_user():
     new_user_id = database.create_user()
     return {
-        "user_id": new_user_id
-    }, 200
+               "user_id": new_user_id
+           }, 200
 
 
 @app.get('/find_user/<user_id>')
@@ -27,9 +27,9 @@ def find_user(user_id: str):
     if user is None:
         return "Not found.", 404
     return {
-        "user_id": user.user_id,
-        "credit": user.credit,
-    }, 200
+               "user_id": user.user_id,
+               "credit": user.credit,
+           }, 200
 
 
 @app.post('/add_funds/<user_id>/<amount>')
@@ -70,5 +70,13 @@ def payment_status(user_id: str, order_id: str):
     if payment is None:
         return "Not found.", 404
     return {
-        "Paid": True if payment is not None else False
-    }, 200
+               "Paid": True if payment is not None else False
+           }, 200
+
+
+@app.get('/check_user/<user_id>/')
+def check_user(user_id: str):
+    user = database.check_user(user_id)
+    return {
+               "user_exists": user
+           }, 200

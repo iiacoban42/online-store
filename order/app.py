@@ -1,4 +1,6 @@
 import collections
+import requests
+import json
 from flask import Flask
 from database import *
 from coordinator import Coordinator
@@ -21,12 +23,20 @@ def order_as_json(order):
 
 @app.post('/create/<user_id>')
 def create_order(user_id):
-    user_exists = coordinator.find_user(user_id)
-    if user_exists:
-        order = database.create_order(user_id)
-        return order_as_json(order), 200
-    else:
-        return f"User {user_id} was not found.", 400
+    if user_id is not None:
+        request = "http://host.docker.internal:5001/check_user/" + user_id
+        response = requests.get(request)
+
+        content = response.content
+
+        content_as_dict = json.loads(content.decode('utf-8'))
+        user_exists = content_as_dict['user_exists']
+
+        if user_exists:
+            order = database.create_order(user_id)
+            return order_as_json(order), 200
+
+    return f"User {user_id} was not found.", 400
 
 
 @app.delete('/remove/<order_id>')
@@ -65,8 +75,23 @@ def find_order(order_id):
 
     cost = 0
     available_stock = []
+
+
     if item_ids != []:
-        cost, available_stock = coordinator.find_cost(item_ids)
+
+        items = ""
+        for i in item_ids:
+            items += str(i) + ","
+        items = items[:len(items) - 1]
+        request = "http://host.docker.internal:5002/calculate_cost/" + items
+
+        response = requests.get(request)
+
+        content = response.content
+
+        content_as_dict = json.loads(content.decode('utf-8'))
+        cost = content_as_dict['cost']
+        available_stock = content_as_dict['available_stock']
 
     updated_order = database.update_cost(order_id, cost)
 
