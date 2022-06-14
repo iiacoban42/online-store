@@ -75,12 +75,16 @@ class _DatabaseConnection:
         return Payment(user_id, order_id, payment[2])
 
     def prepare_payment(self, xid, user_id, order_id, amount):
-        self.db.tpc_begin(xid)
-        cursor = self.cursor()
-        cursor.execute(payment_insert_script, (user_id, order_id, amount))
-        cursor.execute(user_remove_credit_script, (amount, user_id))
-        self.db.tpc_prepare()
-        self.db.reset()
+        try:
+            self.db.tpc_begin(xid)
+            cursor = self.cursor()
+            cursor.execute(payment_insert_script, (user_id, order_id, amount))
+            cursor.execute(user_remove_credit_script, (amount, user_id))
+            self.db.tpc_prepare()
+        except Exception as e:
+            raise e
+        finally:
+            self.db.reset()
 
     def commit_transaction(self, xid):
         self.db.tpc_commit(xid)
@@ -92,7 +96,6 @@ class _DatabaseConnection:
         cursor = self.cursor()
         cursor.execute(check_user_script, (user_id,))
         result = cursor.fetchone()[0]
-
         if result == 1:
             return True
 

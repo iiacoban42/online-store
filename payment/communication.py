@@ -30,7 +30,6 @@ class _Communicator:
 
     def start_listening(self):
         for msg in self._payment_consumer:
-            print(msg)
             msg_value = msg.value
             _id = msg_value["_id"]
             msg_command = msg_value["command"]
@@ -46,9 +45,10 @@ class _Communicator:
                     self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
                     return
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, success(_id, msg.value["command"]))
-                print("sent success result")
             except psycopg2.Error as e:
-                print(e.pgerror)
+                print(f"PG Error: {e.pgerror}")
+                print(f"Error: {e}")
+                print(f"Message: {msg_value}")
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
 
 

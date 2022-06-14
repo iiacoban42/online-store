@@ -62,10 +62,11 @@ class _DatabaseConnection:
         self.commit()
         return modified_item
 
-    def remove_stock_request(self, xid, item_id, amount):
+    def remove_stock_request(self, xid, counts):
         self.db.tpc_begin(xid)
         cursor = self.cursor()
-        cursor.execute(remove_item_stock_script, (amount, item_id, amount))
+        for i in counts:
+            cursor.execute(remove_item_stock_script, (counts[i], i, counts[i]))
         self.db.tpc_prepare()
         self.db.reset()
 

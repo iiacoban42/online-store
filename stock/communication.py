@@ -40,8 +40,7 @@ class _Communicator:
                     msg_obj = msg_value["obj"]
                     item_ids = msg_obj["item_ids"]
                     counts = dict(collections.Counter(item_ids))
-                    for i in counts:
-                        self._db_connection.remove_stock_request(_id, i, counts[i])
+                    self._db_connection.remove_stock_request(_id, counts)
                 elif msg_command == COMMIT_TRANSACTION:
                     self._db_connection.commit_transaction(_id)
                 elif msg_command == ROLLBACK_TRANSACTION:
