@@ -2,9 +2,8 @@ import sys
 import time
 
 import psycopg2
-from kafka3 import KafkaConsumer
-from kafka3 import KafkaProducer
-from kafka3.errors import NoBrokersAvailable
+from kafka import KafkaProducer, KafkaConsumer
+from kafka.errors import NoBrokersAvailable
 
 from shared.communication import *
 from database import attempt_connect
@@ -48,7 +47,7 @@ class _Communicator:
                 elif msg_command == ROLLBACK_TRANSACTION:
                     self._db_connection.rollback_transaction(_id)
                 else:
-                    self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
+                    self._stock_producer.send(STOCK_RESULTS_TOPIC, fail(_id, msg.value["command"]))
                     return
                 self._stock_producer.send(STOCK_RESULTS_TOPIC, success(_id, msg.value["command"]))
             except psycopg2.Error as e:

@@ -14,8 +14,8 @@ class Status(Flag):
     PAYMENT_COMMITTED = 4
     STOCK_PREPARED = 8
     STOCK_COMMITTED = 16
-    FINISHED = ~ERROR & PAYMENT_COMMITTED & STOCK_COMMITTED
-    READY_FOR_COMMIT = ~ERROR & PAYMENT_PREPARED & ~PAYMENT_COMMITTED & STOCK_PREPARED & ~STOCK_COMMITTED
+    FINISHED = ~ERROR | PAYMENT_COMMITTED | STOCK_COMMITTED
+    READY_FOR_COMMIT = ~ERROR | PAYMENT_PREPARED | ~PAYMENT_COMMITTED | STOCK_PREPARED | ~STOCK_COMMITTED
 
     def has_flag(self, flag: Flag):
         return self & flag == flag
@@ -35,10 +35,14 @@ class Coordinator:
     def listen_results(self):
         results_consumer = self.communicator.results()
         print("listening")
-        for msg in results_consumer:
-            print(msg)
-            print(msg.topic)
-            self.result_func_dict[msg.topic](msg)
+        while True:
+            msg = results_consumer.poll(5000, max_records=1)
+            if not msg:
+                results_consumer.topics()
+                continue
+            for v in msg.values():
+                print(v[0])
+                self.result_func_dict[v[0].topic](v[0])
 
     def handle_payment_result(self, result):
         result_obj = result.value
@@ -74,6 +78,7 @@ class Coordinator:
 
     def do_next_action(self, _id):
         state = self.running_requests[_id]
+        print(state)
         if state.has_flag(Status.FINISHED):
             return
         if state.has_flag(Status.ERROR):

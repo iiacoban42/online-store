@@ -1,9 +1,8 @@
 import sys
 import time
 
-from kafka3 import KafkaConsumer
-from kafka3 import KafkaProducer
-from kafka3.errors import NoBrokersAvailable
+from kafka import KafkaProducer, KafkaConsumer
+from kafka.errors import NoBrokersAvailable
 
 from shared.communication import *
 
@@ -20,11 +19,11 @@ class _Communicator:
         )
 
         self._results_consumer = KafkaConsumer(
-            PAYMENT_RESULTS_TOPIC, STOCK_RESULTS_TOPIC,
             bootstrap_servers="kafka:9092",
             client_id="order_service",
             value_deserializer=lambda x: json.loads(x)
         )
+        self._results_consumer.subscribe(topics=[PAYMENT_RESULTS_TOPIC, STOCK_RESULTS_TOPIC])
 
         self._stock_producer = KafkaProducer(
             bootstrap_servers="kafka:9092",

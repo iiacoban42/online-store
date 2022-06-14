@@ -2,9 +2,8 @@ import sys
 import time
 
 import psycopg2
-from kafka3 import KafkaConsumer
-from kafka3 import KafkaProducer
-from kafka3.errors import NoBrokersAvailable
+from kafka import KafkaProducer, KafkaConsumer
+from kafka.errors import NoBrokersAvailable
 
 from shared.communication import *
 from database import attempt_connect
