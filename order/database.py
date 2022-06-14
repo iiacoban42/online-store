@@ -33,7 +33,7 @@ class _DatabaseConnection:
 
     def create_order(self, user_id):
         cursor = self.cursor()
-        cursor.execute(create_order_script, (user_id))
+        cursor.execute(create_order_script, (user_id,))
         order = cursor.fetchone()
         self.commit()
         return order
@@ -86,6 +86,7 @@ class _DatabaseConnection:
         modified_order = cursor.fetchone()
         self.commit()
         return modified_order
+
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:
     while retries > 0:

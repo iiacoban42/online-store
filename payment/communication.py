@@ -31,6 +31,7 @@ class _Communicator:
 
     def start_listening(self):
         for msg in self._payment_consumer:
+            print(msg)
             msg_value = msg.value
             _id = msg_value["_id"]
             msg_command = msg_value["command"]
@@ -38,11 +39,15 @@ class _Communicator:
                 if msg_command == BEGIN_TRANSACTION:
                     msg_obj = msg_value["obj"]
                     self._db_connection.prepare_payment(_id, msg_obj["user_id"], msg_obj["order_id"], msg_obj["amount"])
-                if msg_command == COMMIT_TRANSACTION:
+                elif msg_command == COMMIT_TRANSACTION:
                     self._db_connection.commit_transaction(_id)
-                if msg_command == ROLLBACK_TRANSACTION:
+                elif msg_command == ROLLBACK_TRANSACTION:
                     self._db_connection.rollback_transaction(_id)
+                else:
+                    self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
+                    return
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, success(_id, msg.value["command"]))
+                print("sent success result")
             except psycopg2.Error as e:
                 print(e.pgerror)
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
