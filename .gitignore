@@ -3,4 +3,5 @@
 .DS_Store
 venv
 
+*.bkp
 stress-test/
