@@ -88,7 +88,7 @@ class _DatabaseConnection:
         return modified_order
 
 
-def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:
+def attempt_connect(retries=3, timeout=15000) -> _DatabaseConnection:
     while retries > 0:
         try:
             return _DatabaseConnection()

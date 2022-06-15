@@ -37,7 +37,6 @@ class Coordinator:
 
     def listen_results(self):
         results_consumer = self.communicator.results()
-        print("listening")
         while True:
             try:
                 topic_queues = results_consumer.poll(5000)
@@ -48,7 +47,7 @@ class Coordinator:
                     for msg in message_queue:
                         self.result_func_dict[msg.topic](msg)
             except Exception as e:
-                print(e)
+                print(f"LISTENING exception: {e}")
 
     def handle_payment_result(self, result):
         result_obj = result.value
@@ -70,7 +69,7 @@ class Coordinator:
             elif res_obj["command"] == sc.COMMIT_TRANSACTION:
                 self.running_requests[_id] |= Status.PAYMENT_COMMITTED
         elif result == sc.FAIL:
-            print(f"payment error for command {res_obj['command']}")
+            print(f"FAIL payment: {_id} for {Status(res_obj['command'])}")
             self.running_requests[_id] |= Status.ERROR
 
     def set_new_state_stock(self, _id, res_obj):
@@ -81,22 +80,21 @@ class Coordinator:
             elif res_obj["command"] == sc.COMMIT_TRANSACTION:
                 self.running_requests[_id] |= Status.STOCK_COMMITTED
         elif result == sc.FAIL:
-            print(f"stock error for command {res_obj['command']}")
+            print(f"FAIL stock: {_id} for {Status(res_obj['command'])}")
             self.running_requests[_id] |= Status.ERROR
 
     def do_next_action(self, _id):
         state = self.running_requests[_id]
-        print(state)
         if state.has_flag(Status.ERROR) and not state.has_flag(Status.ROLLBACK_SENT):
-            print("rolling back")
+            print(f"ROLLBACK: {_id}")
             self.communicator.rollback(_id)
             self.running_requests[_id] |= Status.ROLLBACK_SENT
             return
         if state.has_flag(Status.FINISHED):
-            print("finished")
+            print(f"FINISHED: {_id}")
             return
         if state.has_flag(Status.READY_FOR_COMMIT) and not state.has_flag(Status.COMMIT_SENT):
-            print("committing")
+            print(f"COMMIT: {_id}")
             self.communicator.commit_transaction(_id)
             self.running_requests[_id] |= Status.COMMIT_SENT
 
