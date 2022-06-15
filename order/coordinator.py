@@ -16,6 +16,8 @@ class Status(Flag):
     STOCK_COMMITTED = 16
     ROLLBACK_SENT = 32
     COMMIT_SENT = 64
+    PAYMENT_FAIL = 128
+    STOCK_FAIL = 256
     FINISHED = PAYMENT_COMMITTED | STOCK_COMMITTED
     READY_FOR_COMMIT = PAYMENT_PREPARED | STOCK_PREPARED
 
@@ -70,7 +72,7 @@ class Coordinator:
                 self.running_requests[_id] |= Status.PAYMENT_COMMITTED
         elif result == sc.FAIL:
             print(f"FAIL payment: {_id} for {Status(res_obj['command'])}")
-            self.running_requests[_id] |= Status.ERROR
+            self.running_requests[_id] |= Status.ERROR | Status.PAYMENT_FAIL
 
     def set_new_state_stock(self, _id, res_obj):
         result = res_obj["res"]
@@ -81,13 +83,12 @@ class Coordinator:
                 self.running_requests[_id] |= Status.STOCK_COMMITTED
         elif result == sc.FAIL:
             print(f"FAIL stock: {_id} for {Status(res_obj['command'])}")
-            self.running_requests[_id] |= Status.ERROR
+            self.running_requests[_id] |= Status.ERROR | Status.STOCK_FAIL
 
     def do_next_action(self, _id):
         state = self.running_requests[_id]
         if state.has_flag(Status.ERROR) and not state.has_flag(Status.ROLLBACK_SENT):
-            print(f"ROLLBACK: {_id}")
-            self.communicator.rollback(_id)
+            self.communicator.rollback(_id, state.has_flag(Status.PAYMENT_FAIL), state.has_flag(Status.STOCK_FAIL))
             self.running_requests[_id] |= Status.ROLLBACK_SENT
             return
         if state.has_flag(Status.FINISHED):

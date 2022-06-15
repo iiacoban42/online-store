@@ -41,6 +41,7 @@ class _Communicator:
                     self._db_connection.commit_transaction(_id)
                 elif msg_command == ROLLBACK_TRANSACTION:
                     self._db_connection.rollback_transaction(_id)
+                    return
                 else:
                     self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
                     return
