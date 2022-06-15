@@ -2,6 +2,7 @@ import os
 import sys
 import atexit
 import time
+from uhashring import HashRing
 
 from models import *
 from scripts import *
@@ -9,85 +10,115 @@ from scripts import *
 import psycopg2
 
 
+def connect_to_postgres(db_conf):
+    conn = psycopg2.connect(**db_conf)
+    return conn
+
 class _DatabaseConnection:
+
+    DATABASE_CLIENTS = {
+        "5433": {
+            "host": os.environ['POSTGRES_HOST'],
+            "port": "5433",
+            "database": os.environ['POSTGRES_DB'],
+            "user": os.environ['POSTGRES_USER'],
+            "password": os.environ['POSTGRES_PASSWORD']
+        },
+        "5434": {
+            "host": os.environ['POSTGRES_HOST'],
+            "port": "5434",
+            "database": os.environ['POSTGRES_DB'],
+            "user": os.environ['POSTGRES_USER'],
+            "password": os.environ['POSTGRES_PASSWORD']
+        },
+        "5435": {
+            "host": os.environ['POSTGRES_HOST'],
+            "port": "5435",
+            "database": os.environ['POSTGRES_DB'],
+            "user": os.environ['POSTGRES_USER'],
+            "password": os.environ['POSTGRES_PASSWORD']
+        },
+    }
+
+    hash_ring = HashRing(nodes=["5433", "5434", "5435"])
+
     def __init__(self):
-        self.db = psycopg2.connect(host=os.environ['POSTGRES_HOST'],
-                                   port=int(os.environ['POSTGRES_PORT']),
-                                   user=os.environ['POSTGRES_USER'],
-                                   password=os.environ['POSTGRES_PASSWORD'],
-                                   database=int(os.environ['POSTGRES_DB']))
-        self._create_db()
+        self.db = {}
+        for node in self.DATABASE_CLIENTS:
+            self.db[node] = connect_to_postgres(self.DATABASE_CLIENTS.get(node))
+            self._create_db(node)
         atexit.register(self._close_db_connection)
 
     def _close_db_connection(self):
-        self.db.close()
+        for node in self.DATABASE_CLIENTS:
+            self.db[node].close()
 
-    def cursor(self):
-        return self.db.cursor()
+    def cursor(self, node):
+        return self.db[node].cursor()
 
-    def commit(self):
-        self.db.commit()
+    def commit(self, node):
+        self.db[node].commit()
 
-    def _create_db(self):
-        self.cursor().execute(create_script)
-        self.commit()
+    def _create_db(self, node):
+        self.cursor(node).execute(create_script)
+        self.commit(node)
 
-    def create_user(self):
-        cursor = self.cursor()
+    def create_user(self, node):
+        cursor = self.cursor(node)
         cursor.execute(user_insert_script)
         new_user_id = cursor.fetchone()[0]
-        self.commit()
+        self.commit(node)
         return new_user_id
 
-    def find_user(self, user_id):
-        cursor = self.cursor()
+    def find_user(self, user_id, node):
+        cursor = self.cursor(node)
         cursor.execute(user_find_script, user_id)
         user = cursor.fetchone()
-        self.commit()
+        self.commit(node)
         return User(user[0], user[1])
 
-    def add_credit(self, user_id, amount):
-        cursor = self.cursor()
+    def add_credit(self, user_id, amount, node):
+        cursor = self.cursor(node)
         cursor.execute(user_add_credit_script, (amount, user_id))
-        self.commit()
+        self.commit(node)
 
-    def remove_credit(self, user_id, amount):
-        cursor = self.cursor()
+    def remove_credit(self, user_id, amount, node):
+        cursor = self.cursor(node)
         cursor.execute(user_remove_credit_script, (amount, user_id))
         credit = cursor.fetchone()[0]
-        self.commit()
+        self.commit(node)
         return credit
 
-    def create_payment(self, user_id: str, order_id: str, amount: int):
-        cursor = self.cursor()
+    def create_payment(self, user_id: str, order_id: str, amount: int, node):
+        cursor = self.cursor(node)
         cursor.execute(payment_insert_script, (user_id, order_id, amount))
         new_payment = cursor.fetchone()
-        self.commit()
+        self.commit(node)
         return Payment(user_id, order_id, new_payment[2])
 
-    def find_payment(self, user_id, order_id):
-        cursor = self.cursor()
+    def find_payment(self, user_id, order_id, node):
+        cursor = self.cursor(node)
         cursor.execute(payment_get_status_script, (user_id, order_id))
         payment = cursor.fetchone()
-        self.commit()
+        self.commit(node)
         return Payment(user_id, order_id, payment[2])
 
-    def prepare_payment(self, xid, user_id, order_id, amount):
-        self.db.tpc_begin(xid)
-        cursor = self.cursor()
+    def prepare_payment(self, xid, user_id, order_id, amount, node):
+        self.db[node].tpc_begin(xid)
+        cursor = self.cursor(node)
         cursor.execute(payment_insert_script, (user_id, order_id, amount))
         cursor.execute(user_remove_credit_script, (amount, user_id))
-        self.db.tpc_prepare()
-        self.db.reset()
+        self.db[node].tpc_prepare()
+        self.db[node].reset()
 
-    def commit_transaction(self, xid):
-        self.db.tpc_commit(xid)
+    def commit_transaction(self, xid, node):
+        self.db[node].tpc_commit(xid)
 
-    def rollback_transaction(self, xid):
-        self.db.tpc_rollback(xid)
+    def rollback_transaction(self, xid, node):
+        self.db[node].tpc_rollback(xid)
 
-    def check_user(self, user_id):
-        cursor = self.cursor()
+    def check_user(self, user_id, node):
+        cursor = self.cursor(node)
         cursor.execute(check_user_script, (user_id,))
         result = cursor.fetchone()[0]
 
