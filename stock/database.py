@@ -2,6 +2,7 @@ import os
 import sys
 import atexit
 import time
+from uhashring import HashRing
 
 from models import *
 from scripts import *
@@ -11,67 +12,97 @@ import collections
 import psycopg2
 
 
+def connect_to_postgres(db_conf):
+    conn = psycopg2.connect(**db_conf)
+    return conn
+
 class _DatabaseConnection:
+    DATABASE_CLIENTS = {
+        "5433": {
+            "host": os.environ['POSTGRES_HOST'],
+            "port": "5433",
+            "database": os.environ['POSTGRES_DB'],
+            "user": os.environ['POSTGRES_USER'],
+            "password": os.environ['POSTGRES_PASSWORD']
+        },
+        "5434": {
+            "host": os.environ['POSTGRES_HOST'],
+            "port": "5434",
+            "database": os.environ['POSTGRES_DB'],
+            "user": os.environ['POSTGRES_USER'],
+            "password": os.environ['POSTGRES_PASSWORD']
+        },
+        "5435": {
+            "host": os.environ['POSTGRES_HOST'],
+            "port": "5435",
+            "database": os.environ['POSTGRES_DB'],
+            "user": os.environ['POSTGRES_USER'],
+            "password": os.environ['POSTGRES_PASSWORD']
+        },
+    }
+
+    hash_ring = HashRing(nodes=["5433", "5434", "5435"])
+
     def __init__(self):
-        self.db = psycopg2.connect(host=os.environ['POSTGRES_HOST'],
-                                   port=int(os.environ['POSTGRES_PORT']),
-                                   user=os.environ['POSTGRES_USER'],
-                                   password=os.environ['POSTGRES_PASSWORD'],
-                                   database=int(os.environ['POSTGRES_DB']))
-        self._create_db()
+        self.db = {}
+        for node in self.DATABASE_CLIENTS:
+            self.db[node] = connect_to_postgres(self.DATABASE_CLIENTS.get(node))
+            self._create_db(node)
         atexit.register(self._close_db_connection)
 
     def _close_db_connection(self):
-        self.db.close()
+        for node in self.DATABASE_CLIENTS:
+            self.db[node].close()
 
-    def cursor(self):
-        return self.db.cursor()
+    def cursor(self, node):
+        return self.db[node].cursor()
 
-    def commit(self):
-        self.db.commit()
+    def commit(self, node):
+        self.db[node].commit()
 
-    def _create_db(self):
-        self.cursor().execute(create_table_script)
-        self.commit()
+    def _create_db(self, node):
+        self.cursor(node).execute(create_table_script)
+        self.commit(node)
 
-    def create_item(self, item_price):
-        cursor = self.cursor()
+
+    def create_item(self, item_price, node):
+        cursor = self.cursor(node)
         cursor.execute(insert_item_script, (item_price,))
         new_item_id = cursor.fetchone()[0]
-        self.commit()
+        self.commit(node)
         return new_item_id
 
-    def find_item(self, item_id):
-        cursor = self.cursor()
+    def find_item(self, item_id, node):
+        cursor = self.cursor(node)
         cursor.execute(find_item_script, (item_id,))
         item = cursor.fetchone()
-        self.commit()
+        self.commit(node)
         return item
 
-    def add_stock(self, item_id, amount):
-        cursor = self.cursor()
+    def add_stock(self, item_id, amount, node):
+        cursor = self.cursor(node)
         cursor.execute(add_item_stock_script, (amount, item_id))
         modified_item = cursor.fetchone()
-        self.commit()
+        self.commit(node)
         return modified_item
 
-    def remove_stock(self, item_id, amount):
-        cursor = self.cursor()
+    def remove_stock(self, item_id, amount, node):
+        cursor = self.cursor(node)
         cursor.execute(remove_item_stock_script, (amount, item_id, amount))
         modified_item = cursor.fetchone()
-        self.commit()
+        self.commit(node)
         return modified_item
 
-    def remove_stock_request(self, xid, item_id, amount):
-        self.db.tpc_begin(xid)
-        cursor = self.cursor()
+    def remove_stock_request(self, xid, item_id, amount, node):
+        self.db[node].tpc_begin(xid)
+        cursor = self.cursor(node)
         cursor.execute(remove_item_stock_script, (amount, item_id, amount))
-        self.db.tpc_prepare()
-        self.db.reset()
+        self.db[node].tpc_prepare()
+        self.db[node].reset()
 
-    def calculate_cost(self, item_ids):
+    def calculate_cost(self, item_ids, node):
 
-        cursor = self.cursor()
+        cursor = self.cursor(node)
 
         counts = dict(collections.Counter(item_ids))
 
@@ -86,11 +117,11 @@ class _DatabaseConnection:
 
         return cost, available_stock
 
-    def commit_transaction(self, xid):
-        self.db.tpc_commit(xid)
+    def commit_transaction(self, xid, node):
+        self.db[node].tpc_commit(xid)
 
-    def rollback_transaction(self, xid):
-        self.db.tpc_rollback(xid)
+    def rollback_transaction(self, xid, node):
+        self.db[node].tpc_rollback(xid)
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:

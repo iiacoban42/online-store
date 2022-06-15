@@ -5,8 +5,6 @@ import atexit
 import time
 from uhashring import HashRing
 
-
-
 from models import *
 from scripts import *
 
