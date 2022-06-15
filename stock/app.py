@@ -1,6 +1,8 @@
 import threading
 
 from flask import Flask
+from psycopg2 import ProgrammingError, IntegrityError
+
 from database import *
 import communication
 
@@ -14,7 +16,11 @@ threading.Thread(target=lambda: communicator.start_listening()).start()
 
 @app.post('/item/create/<price>')
 def create_item(price: int):
-    new_item_id = database.create_item(price)
+    try:
+        new_item_id = database.create_item(price)
+    except IntegrityError as e:
+        print(e)
+        return f"Price cannot be negative", 400
     return {
                "item_id": new_item_id
            }, 200
@@ -24,7 +30,7 @@ def create_item(price: int):
 def find_item(item_id: str):
     item = database.find_item(item_id)
     if item is None:
-        return f"Item: {item_id} not found.", 400
+        return f"Not found.", 400
     return {
                "item_id": item[0],
                "price": item[1],
@@ -42,8 +48,13 @@ def add_stock(item_id: str, amount: int):
 
 @app.post('/subtract/<item_id>/<amount>')
 def remove_stock(item_id: str, amount: int):
-    if database.remove_stock(item_id, amount) is None:
-        return f"Cannot deduct {amount}, from {item_id}. Not enough stock, or item was not found.", 400
+    try:
+        res = database.remove_stock(item_id, amount)
+        if res is None:
+            return f"Item with id: {item_id} not found", 400
+    except IntegrityError as e:
+        print(e)
+        return f"Not enough stock", 400
 
     return f"Success. Deducted {amount} from item: {item_id}.", 200
 

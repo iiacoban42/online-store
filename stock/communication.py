@@ -45,13 +45,16 @@ class _Communicator:
                     self._db_connection.commit_transaction(_id)
                 elif msg_command == ROLLBACK_TRANSACTION:
                     self._db_connection.rollback_transaction(_id)
-                    return
                 else:
                     self._stock_producer.send(STOCK_RESULTS_TOPIC, fail(_id, msg.value["command"]))
                     return
                 self._stock_producer.send(STOCK_RESULTS_TOPIC, success(_id, msg.value["command"]))
             except psycopg2.Error as e:
-                print(e.pgerror)
+                print(f"--STOCK_{_id}--")
+                print(f"PG Error: {e.pgerror}")
+                print(f"Error: {e}")
+                print(f"Message: {msg_value}")
+                print("-----")
                 self._stock_producer.send(STOCK_RESULTS_TOPIC, fail(_id, msg.value["command"]))
 
 

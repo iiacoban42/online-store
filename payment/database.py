@@ -51,14 +51,21 @@ class _DatabaseConnection:
     def add_credit(self, user_id, amount):
         cursor = self.cursor()
         cursor.execute(user_add_credit_script, (amount, user_id))
+        modified_item = cursor.fetchone()
         self.commit()
+        return modified_item
 
     def remove_credit(self, user_id, amount):
-        cursor = self.cursor()
-        cursor.execute(user_remove_credit_script, (amount, user_id))
-        credit = cursor.fetchone()[0]
-        self.commit()
-        return credit
+        try:
+            cursor = self.cursor()
+            cursor.execute(user_remove_credit_script, (amount, user_id))
+            modified_item = cursor.fetchone()
+            self.commit()
+        except Exception as e:
+            raise e
+        finally:
+            self.db.reset()
+        return modified_item
 
     def create_payment(self, user_id: str, order_id: str, amount: float):
         cursor = self.cursor()

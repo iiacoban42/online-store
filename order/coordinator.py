@@ -8,7 +8,7 @@ import shared.communication as sc
 
 
 class Status(Flag):
-    STARTED = 0
+    STARTED = 512
     ERROR = 1
     PAYMENT_PREPARED = 2
     PAYMENT_COMMITTED = 4
@@ -106,10 +106,11 @@ class Coordinator:
         self.communicator.start_remove_stock(_id, sc.StockRequest(order_id, item_ids))
         return _id
 
-    def wait_result(self, _id, timeout=5000):
-        start = time.time() * 1000
+    def wait_result(self, _id, timeout=5):
+        t_end = time.monotonic() + timeout
         result = False
-        while time.time() * 1000 < start + timeout:
+        print(f"---{_id}--")
+        while time.monotonic() < t_end:
             state = self.running_requests[_id]
             if _id not in self.running_requests:
                 return result
@@ -119,5 +120,6 @@ class Coordinator:
                 result = True
                 break
         # TODO: Timeout -> check for any open transactions and roll them back
+        print(f"final state: {self.running_requests[_id]}")
         self.running_requests.pop(_id)
         return result
