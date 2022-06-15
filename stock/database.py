@@ -65,9 +65,9 @@ class _DatabaseConnection:
         self.commit(node)
 
 
-    def create_item(self, item_price, node):
+    def create_item(self, item_price, item_id, node):
         cursor = self.cursor(node)
-        cursor.execute(insert_item_script, (item_price,))
+        cursor.execute(insert_item_script, (item_id, item_price,))
         new_item_id = cursor.fetchone()[0]
         self.commit(node)
         return new_item_id

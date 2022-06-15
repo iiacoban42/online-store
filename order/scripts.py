@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.\"Orders\"
 
 create_order_script = """
 INSERT INTO public.\"Orders\" (order_id, paid, items, user_id, total_cost)
-VALUES (DEFAULT, FALSE, ARRAY[]::int[], %s, 0) RETURNING *;
+VALUES (%s, FALSE, ARRAY[]::int[], %s, 0) RETURNING *;
 """
 
 remove_order_script = "DELETE FROM public.\"Orders\" WHERE order_id = %s RETURNING *;"

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.\"Payments\"
 );
 """
 
-user_insert_script = "INSERT INTO public.\"Users\" DEFAULT VALUES RETURNING user_id;"
+user_insert_script = "INSERT INTO public.\"Users\" (user_id, credit) VALUES (%s, DEFAULT)  RETURNING user_id;"
 
 user_find_script = "SELECT * FROM public.\"Users\" WHERE user_id = %s;"
 

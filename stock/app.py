@@ -1,6 +1,7 @@
 import threading
 
 from flask import Flask
+import json
 import hashlib
 from database import *
 import communication
@@ -11,6 +12,16 @@ database = attempt_connect()
 
 communicator = communication.try_connect()
 threading.Thread(target=lambda: communicator.start_listening()).start()
+
+BACKUP_FILE = "stock/item_id.json"
+
+with open(BACKUP_FILE, "w", encoding="utf8") as file:
+    ITEM_ID = json.load(file)
+
+def increment_id():
+    ITEM_ID["item_id"] += 1
+    with open(BACKUP_FILE, "w", encoding="utf8") as file:
+        json.dump(ITEM_ID, file)
 
 def get_shard(item_id):
 
@@ -23,7 +34,11 @@ def get_shard(item_id):
 
 @app.post('/item/create/<price>')
 def create_item(price: int):
-    new_item_id = database.create_item(price)
+    item_id = ITEM_ID["item_id"]
+    node = get_shard(item_id)
+
+    new_item_id = database.create_item(price, item_id, node)
+    increment_id()
     return {
                "item_id": new_item_id
            }, 200

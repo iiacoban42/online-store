@@ -9,6 +9,17 @@ from coordinator import Coordinator
 app = Flask("order-service")
 database = attempt_connect()
 coordinator = Coordinator()
+
+BACKUP_FILE = "order/order_id.json"
+
+with open(BACKUP_FILE, "w", encoding="utf8") as file:
+    ORDER_ID = json.load(file)
+
+def increment_id():
+    ORDER_ID["order_id"] += 1
+    with open(BACKUP_FILE, "w", encoding="utf8") as file:
+        json.dump(ORDER_ID, file)
+
 def order_as_json(order):
     return {
         "order_id": order[0],
@@ -19,7 +30,7 @@ def order_as_json(order):
     }
 
 def get_shard(order_id):
-    
+
     hashed = hashlib.shake_256(order_id.encode())
     # Get 6 character order_id hash
     shortened = hashed.digest(6)
@@ -40,7 +51,11 @@ def create_order(user_id):
         user_exists = content_as_dict['user_exists']
 
         if user_exists:
-            order = database.create_order(user_id)
+            order_id = ORDER_ID["order_id"]
+            node = get_shard(order_id)
+
+            order = database.create_order(user_id, order_id, node)
+            increment_id()
             return order_as_json(order), 200
 
     return f"User {user_id} was not found.", 400

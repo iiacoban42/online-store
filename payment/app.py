@@ -6,12 +6,23 @@ from psycopg2 import ProgrammingError, IntegrityError
 
 from database import *
 import communication
+import json
 
 app = Flask("payment-service")
 database = attempt_connect()
 communicator = communication.try_connect()
 
 threading.Thread(target=lambda: communicator.start_listening()).start()
+
+BACKUP_FILE = "payment/user_id.json"
+
+with open(BACKUP_FILE, "w", encoding="utf8") as file:
+    USER_ID = json.load(file)
+
+def increment_id():
+    USER_ID["user_id"] += 1
+    with open(BACKUP_FILE, "w", encoding="utf8") as file:
+        json.dump(USER_ID, file)
 
 
 def get_shard(user_id):
@@ -25,7 +36,11 @@ def get_shard(user_id):
 
 @app.post('/create_user')
 def create_user():
-    new_user_id = database.create_user()
+    user_id = USER_ID["user_id"]
+    node = get_shard(user_id)
+
+    new_user_id = database.create_user(user_id, node)
+    increment_id()
     return {
                "user_id": new_user_id
            }, 200

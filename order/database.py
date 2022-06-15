@@ -63,9 +63,9 @@ class _DatabaseConnection:
         self.cursor(node).execute(create_orders_table)
         self.commit(node)
 
-    def create_order(self, user_id, node):
+    def create_order(self, user_id, order_id, node):
         cursor = self.cursor(node)
-        cursor.execute(create_order_script, (user_id,))
+        cursor.execute(create_order_script, (order_id, user_id,))
         order = cursor.fetchone()
         self.commit(node)
         return order

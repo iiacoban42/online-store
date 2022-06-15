@@ -63,9 +63,9 @@ class _DatabaseConnection:
         self.cursor(node).execute(create_script)
         self.commit(node)
 
-    def create_user(self, node):
+    def create_user(self, user_id, node):
         cursor = self.cursor(node)
-        cursor.execute(user_insert_script)
+        cursor.execute(user_insert_script, (user_id,))
         new_user_id = cursor.fetchone()[0]
         self.commit(node)
         return new_user_id
