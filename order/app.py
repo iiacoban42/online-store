@@ -2,6 +2,7 @@ import collections
 import requests
 import json
 from flask import Flask
+import hashlib
 from database import *
 from coordinator import Coordinator
 
@@ -9,8 +10,6 @@ from coordinator import Coordinator
 app = Flask("order-service")
 database = attempt_connect()
 coordinator = Coordinator()
-
-
 def order_as_json(order):
     return {
         "order_id": order[0],
@@ -19,6 +18,15 @@ def order_as_json(order):
         "user_id": order[3],
         "total_cost": order[4]
     }
+
+def get_shard(order_id):
+    
+    hashed = hashlib.shake_256(order_id.encode())
+    # Get 6 character order_id hash
+    shortened = hashed.digest(6)
+    # use the order_id to get a node key
+    node = database.get_node(shortened)
+    return node
 
 
 @app.post('/create/<user_id>')
@@ -41,7 +49,8 @@ def create_order(user_id):
 
 @app.delete('/remove/<order_id>')
 def remove_order(order_id):
-    order = database.remove_order(order_id)
+    node = get_shard(order_id)
+    order = database.remove_order(order_id, node)
     if order is None:
         return f"Order {order_id} was not found.", 400
 
@@ -50,7 +59,8 @@ def remove_order(order_id):
 
 @app.post('/addItem/<order_id>/<item_id>')
 def add_item(order_id, item_id):
-    if database.add_item(order_id, item_id) is None:
+    node = get_shard(order_id)
+    if database.add_item(order_id, item_id, node) is None:
         return f"Cannot add items to order: {order_id}. The order was not found or has been placed already.", 400
 
     return f"Success. Item: {item_id} added to order: {order_id}", 200
@@ -58,7 +68,8 @@ def add_item(order_id, item_id):
 
 @app.delete('/removeItem/<order_id>/<item_id>')
 def remove_item(order_id, item_id):
-    if database.remove_item(order_id, item_id) is None:
+    node = get_shard(order_id)
+    if database.remove_item(order_id, item_id, node) is None:
         return f"Cannot remove items from order: {order_id}. The order was not found or has been placed already.", 400
 
     return f"Success. Item: {item_id}, from order: {order_id} was removed", 200
@@ -66,7 +77,8 @@ def remove_item(order_id, item_id):
 
 @app.get('/find/<order_id>')
 def find_order(order_id):
-    order = database.find_order(order_id)
+    node = get_shard(order_id)
+    order = database.find_order(order_id, node)
     if order is None:
         return f"Order {order_id} was not found", 400
 
