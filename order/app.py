@@ -6,7 +6,6 @@ import hashlib
 from database import *
 from coordinator import Coordinator
 
-
 app = Flask("order-service")
 database = attempt_connect()
 coordinator = Coordinator()
@@ -88,8 +87,7 @@ def find_order(order_id):
     cost = 0
     available_stock = []
 
-
-    if item_ids != []:
+    if item_ids:
 
         items = ""
         for i in item_ids:
@@ -116,7 +114,7 @@ def find_order(order_id):
         # filter nonexisting items
         filtered_items.extend([item_id] * counts[item_id])
         # check if something is out of stock
-        if(stock < counts[item_id]):
+        if stock < counts[item_id]:
             items_out_of_stock_ids.append(item_id)
             items_out_of_stock_values.append(stock)
 
@@ -125,10 +123,10 @@ def find_order(order_id):
 
     order_json = order_as_json(updated_order)
 
-    if items_out_of_stock_ids != []:
+    if items_out_of_stock_ids:
         order_json["not_enough_stock"] = {
-        "items": items_out_of_stock_ids,
-        "available_stock": items_out_of_stock_values
+            "items": items_out_of_stock_ids,
+            "available_stock": items_out_of_stock_values
         }
 
     return order_json, 200
@@ -142,25 +140,18 @@ def checkout(order_id):
 
     item_ids = order_json["items"]
 
-    if item_ids == []:
+    if not item_ids:
         return f"Order {order_id} does not contain any items.", 400
 
     if "not_enough_stock" in order_json:
         items_out_of_stock = order_json["not_enough_stock"]["items"]
         return f"Items: {items_out_of_stock} do not have enough stock available.", 400
 
-    payment_checkout =  coordinator.payment_checkout(order_id, order_json["user_id"], order_json["total_cost"])
-    stock_checkout = coordinator.stock_checkout(order_id, item_ids)
+    req_id = coordinator.checkout(order_id, item_ids, order_json["user_id"], order_json["total_cost"])
 
-    if payment_checkout:
+    if coordinator.wait_result(req_id):
         order_json["paid"] = True
         database.update_payment_status(order_id, True)
-
-    if payment_checkout and stock_checkout:
         return f"Success. Order {order_id} was placed.", 200
-    elif payment_checkout and not stock_checkout:
-        return f"Stock service failed when attempting to place order {order_id}.", 400
-    elif not payment_checkout and stock_checkout:
-        return f"Payment service failed when attempting to place order {order_id}.", 400
     else:
-        return f"Payment and Stock serviced failed when attempting to place order {order_id}.", 400
+        return f"Checkout for {order_id} failed.", 400

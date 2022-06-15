@@ -1,9 +1,8 @@
 import sys
 import time
 
-from kafka3 import KafkaConsumer
-from kafka3 import KafkaProducer
-from kafka3.errors import NoBrokersAvailable
+from kafka import KafkaProducer, KafkaConsumer
+from kafka.errors import NoBrokersAvailable
 
 from shared.communication import *
 
@@ -19,12 +18,12 @@ class _Communicator:
             value_serializer=lambda x: json.dumps(x).encode('utf-8')
         )
 
-        self._payment_consumer = KafkaConsumer(
+        self._results_consumer = KafkaConsumer(
             bootstrap_servers="kafka:9092",
             client_id="order_service",
             value_deserializer=lambda x: json.loads(x)
         )
-        self._payment_consumer.subscribe([PAYMENT_RESULTS_TOPIC])
+        self._results_consumer.subscribe(topics=[PAYMENT_RESULTS_TOPIC, STOCK_RESULTS_TOPIC])
 
         self._stock_producer = KafkaProducer(
             bootstrap_servers="kafka:9092",
@@ -32,12 +31,8 @@ class _Communicator:
             value_serializer=lambda x: json.dumps(x).encode('utf-8')
         )
 
-        self._stock_consumer = KafkaConsumer(
-            bootstrap_servers="kafka:9092",
-            client_id="order_service",
-            value_deserializer=lambda x: json.loads(x)
-        )
-        self._stock_consumer.subscribe([STOCK_RESULTS_TOPIC])
+    def results(self):
+        return self._results_consumer
 
     def start_payment(self, _id, payment_request: PaymentRequest):
         self._payment_producer.send(
@@ -45,28 +40,32 @@ class _Communicator:
             value=command(_id, BEGIN_TRANSACTION, payment_request)
         )
 
-    def commit_transaction_payment(self, _id):
-        self._payment_producer.send(
-            PAYMENT_REQUEST_TOPIC,
-            value=command(_id, COMMIT_TRANSACTION)
-        )
-
-    def payment_results(self):
-        return self._payment_consumer
-
-    def stock_results(self):
-        return self._stock_consumer
-
     def start_remove_stock(self, _id, stock_request: StockRequest):
         self._stock_producer.send(
             STOCK_REQUEST_TOPIC,
             value=command(_id, BEGIN_TRANSACTION, stock_request)
         )
 
-    def commit_transaction_stock(self, _id):
+    def commit_transaction(self, _id):
+        self._payment_producer.send(
+            PAYMENT_REQUEST_TOPIC,
+            value=command(_id, COMMIT_TRANSACTION)
+        )
+
         self._stock_producer.send(
             STOCK_REQUEST_TOPIC,
             value=command(_id, COMMIT_TRANSACTION)
+        )
+
+    def rollback(self, _id):
+        self._stock_producer.send(
+            STOCK_REQUEST_TOPIC,
+            value=command(_id, ROLLBACK_TRANSACTION)
+        )
+
+        self._payment_producer.send(
+            PAYMENT_REQUEST_TOPIC,
+            value=command(_id, ROLLBACK_TRANSACTION)
         )
 
 

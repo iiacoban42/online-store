@@ -26,9 +26,9 @@ user_find_script = "SELECT * FROM public.\"Users\" WHERE user_id = %s;"
 
 user_add_credit_script = "UPDATE public.\"Users\" SET credit = credit + %s WHERE user_id = %s;"
 
-user_remove_credit_script = "UPDATE public.\"Users\" SET credit = credit - %s WHERE user_id = %s;"
+user_remove_credit_script = "UPDATE public.\"Users\" SET credit = credit - %s WHERE user_id = %s RETURNING credit;"
 
-payment_insert_script = "INSERT INTO public.\"Payments\" VALUES (%s, %s, %s);"
+payment_insert_script = "INSERT INTO public.\"Payments\" VALUES (%s, %s, %s) RETURNING *;"
 
 payment_get_status_script = "SELECT * FROM public.\"Payments\" WHERE user_id = %s AND order_id = %s;"
 

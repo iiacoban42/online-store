@@ -72,9 +72,11 @@ class _DatabaseConnection:
 
     def find_user(self, user_id, node):
         cursor = self.cursor(node)
-        cursor.execute(user_find_script, user_id)
+        cursor.execute(user_find_script, (user_id, ))
         user = cursor.fetchone()
         self.commit(node)
+        if user is None:
+            return None
         return User(user[0], user[1])
 
     def add_credit(self, user_id, amount, node):
@@ -104,12 +106,16 @@ class _DatabaseConnection:
         return Payment(user_id, order_id, payment[2])
 
     def prepare_payment(self, xid, user_id, order_id, amount, node):
-        self.db[node].tpc_begin(xid)
-        cursor = self.cursor(node)
-        cursor.execute(payment_insert_script, (user_id, order_id, amount))
-        cursor.execute(user_remove_credit_script, (amount, user_id))
-        self.db[node].tpc_prepare()
-        self.db[node].reset()
+        try:
+            self.db[node].tpc_begin(xid)
+            cursor = self.cursor(node)
+            cursor.execute(payment_insert_script, (user_id, order_id, amount))
+            cursor.execute(user_remove_credit_script, (amount, user_id))
+            self.db[node].tpc_prepare()
+        except Exception as e:
+            raise e
+        finally:
+            self.db[node].reset()
 
     def commit_transaction(self, xid, node):
         self.db[node].tpc_commit(xid)
@@ -121,7 +127,6 @@ class _DatabaseConnection:
         cursor = self.cursor(node)
         cursor.execute(check_user_script, (user_id,))
         result = cursor.fetchone()[0]
-
         if result == 1:
             return True
 

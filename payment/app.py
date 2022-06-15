@@ -2,6 +2,8 @@ import threading
 
 from flask import Flask
 import hashlib
+from psycopg2 import ProgrammingError, IntegrityError
+
 from database import *
 import communication
 
@@ -33,6 +35,8 @@ def create_user():
 def find_user(user_id: str):
     node = get_shard(user_id)
     user = database.find_user(user_id, node)
+    if user is None:
+        return "Not found.", 404
     return {
                "user_id": user.user_id,
                "credit": user.credit,
@@ -49,15 +53,19 @@ def add_credit(user_id: str, amount: int):
 @app.post('/pay/<user_id>/<order_id>/<amount>')
 def remove_credit(user_id: str, order_id: str, amount: float):
     node = get_shard(user_id)
-    user = database.find_user(user_id)
-
-    if float(user.credit) >= float(amount):
-        new_payment = database.create_payment(user_id, order_id, amount, node)
+    try:
         database.remove_credit(user_id, amount, node)
-        return {
-                   "Success": new_payment
-               }, 200
-    return f"User {user_id} does not have enough credit.", 400
+    except ProgrammingError as e:
+        print(e)
+        return f"User with id: {user_id} not found", 400
+    except IntegrityError as e:
+        print(e)
+        return f"Not enough funds", 400
+
+    new_payment = database.create_payment(user_id, order_id, amount, node)
+    return {
+        "Success": True
+    }, 200
 
 
 @app.post('/cancel/<user_id>/<order_id>')
@@ -66,8 +74,7 @@ def cancel_payment(user_id: str, order_id: str):
     payment = database.find_payment(user_id, order_id, node)
 
     if payment is None:
-        return f"Payment of order {order_id} not found.", 400
-
+        return f"Not found.", 404
     database.add_credit(user_id, payment.amount, node)
     return f"Payment of order {order_id} cancelled successfully.", 200
 
@@ -76,7 +83,8 @@ def cancel_payment(user_id: str, order_id: str):
 def payment_status(user_id: str, order_id: str):
     node = get_shard(user_id)
     payment = database.find_payment(user_id, order_id, node)
-
+    if payment is None:
+        return "Not found.", 404
     return {
                "Paid": True if payment is not None else False
            }, 200
@@ -86,7 +94,4 @@ def payment_status(user_id: str, order_id: str):
 def check_user(user_id: str):
     node = get_shard(user_id)
     user = database.check_user(user_id, node)
-    
-    return {
-               "user_exists": user
-           }, 200
+    return {"user_exists": user}, 200

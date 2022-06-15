@@ -2,9 +2,8 @@ import sys
 import time
 
 import psycopg2
-from kafka3 import KafkaConsumer
-from kafka3 import KafkaProducer
-from kafka3.errors import NoBrokersAvailable
+from kafka import KafkaProducer, KafkaConsumer
+from kafka.errors import NoBrokersAvailable
 
 from shared.communication import *
 from database import attempt_connect
@@ -38,13 +37,18 @@ class _Communicator:
                 if msg_command == BEGIN_TRANSACTION:
                     msg_obj = msg_value["obj"]
                     self._db_connection.prepare_payment(_id, msg_obj["user_id"], msg_obj["order_id"], msg_obj["amount"])
-                if msg_command == COMMIT_TRANSACTION:
+                elif msg_command == COMMIT_TRANSACTION:
                     self._db_connection.commit_transaction(_id)
-                if msg_command == ROLLBACK_TRANSACTION:
+                elif msg_command == ROLLBACK_TRANSACTION:
                     self._db_connection.rollback_transaction(_id)
+                else:
+                    self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
+                    return
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, success(_id, msg.value["command"]))
             except psycopg2.Error as e:
-                print(e.pgerror)
+                print(f"PG Error: {e.pgerror}")
+                print(f"Error: {e}")
+                print(f"Message: {msg_value}")
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
 
 
