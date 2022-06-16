@@ -60,8 +60,8 @@ services:
     command: gunicorn -b 0.0.0.0:5200 app:app
     env_file:
       - env/stock_service_1.env
-      - env/stock_service_2.env
-      - env/stock_service_3.env
+      # - env/stock_service_2.env
+      # - env/stock_service_3.env
     ports:
       - "5200:5200"
     extra_hosts:
@@ -76,23 +76,23 @@ services:
     ports:
       - 5201:5201
 
-  stock-db-2:
-    image: postgres
-    command: postgres -p 5202 --max_prepared_transactions=100
-    environment:
-      POSTGRES_PASSWORD: test123
-      POSTGRES_DB: 0
-    ports:
-      - 5202:5202
+  # stock-db-2:
+  #   image: postgres
+  #   command: postgres -p 5202 --max_prepared_transactions=100
+  #   environment:
+  #     POSTGRES_PASSWORD: test123
+  #     POSTGRES_DB: 0
+  #   ports:
+  #     - 5202:5202
 
-  stock-db-3:
-    image: postgres
-    command: postgres -p 5203 --max_prepared_transactions=100
-    environment:
-      POSTGRES_PASSWORD: test123
-      POSTGRES_DB: 0
-    ports:
-      - 5203:5203
+  # stock-db-3:
+  #   image: postgres
+  #   command: postgres -p 5203 --max_prepared_transactions=100
+  #   environment:
+  #     POSTGRES_PASSWORD: test123
+  #     POSTGRES_DB: 0
+  #   ports:
+  #     - 5203:5203
 
   payment-service:
     build:

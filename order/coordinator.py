@@ -61,9 +61,9 @@ class Coordinator:
     def handle_stock_result(self, result):
         result_obj = result.value
         _id = result_obj["_id"]
-        item_ids = result_obj["shard_attr"]
+        user_id = result_obj["shard_attr"]
         self.set_new_state_stock(_id, result_obj)
-        self.do_next_action_stock(_id, item_ids)
+        self.do_next_action_stock(_id, user_id)
 
     def set_new_state_payment(self, _id, res_obj):
         result = res_obj["res"]
@@ -102,10 +102,10 @@ class Coordinator:
             self.communicator.commit_transaction(_id, user_id)
             self.running_requests[_id] |= Status.COMMIT_SENT
 
-    def do_next_action_stock(self, _id, item_ids):
+    def do_next_action_stock(self, _id, user_id):
         state = self.running_requests[_id]
         if state.has_flag(Status.ERROR) and not state.has_flag(Status.ROLLBACK_SENT):
-            self.communicator.rollback(_id, state.has_flag(Status.PAYMENT_FAIL), state.has_flag(Status.STOCK_FAIL), item_ids)
+            self.communicator.rollback(_id, state.has_flag(Status.PAYMENT_FAIL), state.has_flag(Status.STOCK_FAIL), user_id)
             self.running_requests[_id] |= Status.ROLLBACK_SENT
             return
         if state.has_flag(Status.FINISHED):
@@ -114,7 +114,7 @@ class Coordinator:
         if state.has_flag(Status.READY_FOR_COMMIT) and not state.has_flag(Status.COMMIT_SENT):
             print(f"COMMIT: {_id}")
 
-            self.communicator.commit_transaction_stock(_id, item_ids)
+            self.communicator.commit_transaction(_id, user_id)
             self.running_requests[_id] |= Status.COMMIT_SENT
 
     def checkout(self, order_id, item_ids, user_id, amount):
@@ -122,7 +122,7 @@ class Coordinator:
         self.running_requests[_id] = Status.STARTED
         self.communicator.start_payment(_id, sc.PaymentRequest(order_id, user_id, amount), user_id)
         print("payment")
-        self.communicator.start_remove_stock(_id, sc.StockRequest(order_id, item_ids), item_ids)
+        self.communicator.start_remove_stock(_id, sc.StockRequest(order_id, item_ids))
         print("stock")
         return _id
 

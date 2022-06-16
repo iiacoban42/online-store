@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.\"Stock\"
     CONSTRAINT Stock_positive CHECK ( stock >= 0 )
 );"""
 
-insert_item_script = "INSERT INTO public.\"Stock\" (item_id, price, stock) VALUES (%s, %s, DEFAULT) RETURNING item_id;"
+insert_item_script = "INSERT INTO public.\"Stock\" (item_id, price, stock) VALUES (DEFAULT, %s, DEFAULT) RETURNING item_id;"
 
 find_item_script = "SELECT * FROM public.\"Stock\" WHERE item_id = %s;"
 
