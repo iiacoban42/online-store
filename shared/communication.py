@@ -12,29 +12,30 @@ STOCK_REQUEST_TOPIC = "stock_requests"
 STOCK_RESULTS_TOPIC = "stock_results"
 
 
-def command(_id, command_number, obj=None):
+def command(_id, command_number, obj=None, shard_attr=None):
     return {
         "_id": _id,
         "command": command_number,
+        "shard_attr": shard_attr,
         "obj": obj.__dict__ if obj is not None else None
     }
 
 
-def success(_id, command_number, shard):
+def success(_id, command_number, shard_attr=None):
     return {
         "_id": _id,
         "command": command_number,
         "res": SUCCESS,
-        "shard": shard
+        "shard_attr": shard_attr
     }
 
 
-def fail(_id, command_number, shard):
+def fail(_id, command_number, shard_attr=None):
     return {
         "_id": _id,
         "command": command_number,
         "res": FAIL,
-        "shard": shard
+        "shard_attr": shard_attr
     }
 
 

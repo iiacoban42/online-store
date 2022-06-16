@@ -22,6 +22,8 @@ services:
       - env/order_service_3.env
     ports:
       - "5100:5100"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   order-db-1:
     image: postgres
@@ -62,6 +64,8 @@ services:
       - env/stock_service_3.env
     ports:
       - "5200:5200"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   stock-db-1:
     image: postgres
@@ -102,6 +106,8 @@ services:
       - env/payment_service_3.env
     ports:
       - "5300:5300"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   payment-db-1:
     image: postgres

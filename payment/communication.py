@@ -34,13 +34,15 @@ class _Communicator:
         for msg in self._payment_consumer:
             msg_value = msg.value
             _id = msg_value["_id"]
+            user_id = msg_value["shard_attr"]
             msg_command = msg_value["command"]
+            print(f"PAYMENT user_id: {user_id}")
             try:
                 msg_obj = msg_value["obj"]
                 ######
                 # need user_id here somehow (not always in msg_obj)
                 ######
-                user_id = msg_obj["user_id"]
+
                 hashed = hashlib.shake_256(str(user_id).encode())
                 shortened = hashed.digest(6)
                 node = self._db_connection.get_node(shortened)
@@ -60,7 +62,7 @@ class _Communicator:
                 print(f"Error: {e}")
                 print(f"Message: {msg_value}")
                 print("-----")
-                self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"], -1))
+                self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"], node))
 
 
 def try_connect(retries=3, timeout=2000) -> _Communicator:

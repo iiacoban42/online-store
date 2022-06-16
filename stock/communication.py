@@ -37,12 +37,14 @@ class _Communicator:
             msg_value = msg.value
             _id = msg_value["_id"]
             msg_command = msg_value["command"]
+            item_ids = msg_value["shard_attr"]
+            print(f"STOCK item_ids: {item_ids}")
             try:
                 msg_obj = msg_value["obj"]
                 ######
                 # need item_id here somehow (not always in msg_obj)
                 ######
-                item_ids = msg_obj["item_ids"]
+
                 counts = dict(collections.Counter(item_ids))
 
                 shard_and_items = {}  # {shard: items_in_shard}

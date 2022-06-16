@@ -44,7 +44,7 @@ def get_shard(order_id):
 
 @app.post('/create/<user_id>')
 def create_order(user_id):
-    if user_id is not None:
+    if user_id is not None and int(user_id) > 0:
         request = "http://host.docker.internal:5300/check_user/" + user_id
         response = requests.get(request)
 
