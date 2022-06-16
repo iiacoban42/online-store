@@ -26,6 +26,27 @@ services:
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
+    ports:
+      - 5433:5433
+    command: -p 5433
+
+  order-db-2:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - 5434:5434
+    command: -p 5434
+
+  order-db-3:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - 5435:5435
+    command: -p 5435
 
   # stock-service:
   #   build:
