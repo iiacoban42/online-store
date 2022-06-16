@@ -27,7 +27,6 @@ def create_order(user_id):
         response = requests.get(request)
 
         content = response.content
-        print(content)
         content_as_dict = json.loads(content.decode('utf-8'))
         user_exists = content_as_dict['user_exists']
 

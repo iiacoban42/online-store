@@ -1,3 +1,6 @@
+import itertools
+import os
+
 BEGIN_TRANSACTION = 1
 ROLLBACK_TRANSACTION = 2
 COMMIT_TRANSACTION = 3
@@ -10,6 +13,12 @@ PAYMENT_RESULTS_TOPIC = "payment_results"
 
 STOCK_REQUEST_TOPIC = "stock_requests"
 STOCK_RESULTS_TOPIC = "stock_results"
+
+NUMBER_OF_PARTITIONS = 4
+
+
+def get_service_id():
+    return int(os.environ["SERVICE_ID"])
 
 
 def command(_id, command_number, obj=None):

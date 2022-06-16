@@ -15,24 +15,62 @@ services:
     image: order:latest
     environment:
       - GATEWAY_URL=http://gateway:80
+      - SERVICE_ID=0
     command: gunicorn -b 0.0.0.0:5000 app:app
     env_file:
       - env/order_service.env
+    depends_on:
+      - kafka
     ports:
     - "5000:5000"
 
-#  order-service-1:
-#    build:
-#      context: ./
-#      dockerfile: ./order/Dockerfile
-#    image: order:latest
-#    environment:
-#      - GATEWAY_URL=http://gateway:80
-#    command: gunicorn -b 0.0.0.0:5001 app:app
-#    env_file:
-#      - env/order_service.env
-#    ports:
-#      - "5001:5001"
+  order-service-1:
+    build:
+      context: ./
+      dockerfile: ./order/Dockerfile
+    image: order:latest
+    environment:
+      - GATEWAY_URL=http://gateway:80
+      - SERVICE_ID=1
+    command: gunicorn -b 0.0.0.0:5001 app:app
+    env_file:
+      - env/order_service-1.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "5001:5001"
+
+  order-service-2:
+    build:
+      context: ./
+      dockerfile: ./order/Dockerfile
+    image: order:latest
+    environment:
+      - GATEWAY_URL=http://gateway:80
+      - SERVICE_ID=2
+    command: gunicorn -b 0.0.0.0:5002 app:app
+    env_file:
+      - env/order_service.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "5002:5002"
+
+  order-service-3:
+    build:
+      context: ./
+      dockerfile: ./order/Dockerfile
+    image: order:latest
+    environment:
+      - GATEWAY_URL=http://gateway:80
+      - SERVICE_ID=3
+    command: gunicorn -b 0.0.0.0:5003 app:app
+    env_file:
+      - env/order_service.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "5003:5003"
 
   order-db:
     image: postgres
@@ -45,22 +83,60 @@ services:
       context: ./
       dockerfile: ./stock/Dockerfile
     image: stock:latest
+    environment:
+      - SERVICE_ID=0
     command: gunicorn -b 0.0.0.0:7000 app:app
     env_file:
       - env/stock_service.env
+    depends_on:
+      - order-service-0
     ports:
       - "7000:7000"
 
-#  stock-service-1:
-#    build:
-#      context: ./
-#      dockerfile: ./stock/Dockerfile
-#    image: stock:latest
-#    command: gunicorn -b 0.0.0.0:7001 app:app
-#    env_file:
-#      - env/stock_service.env
-#    ports:
-#      - "7001:7001"
+  stock-service-1:
+    build:
+      context: ./
+      dockerfile: ./stock/Dockerfile
+    image: stock:latest
+    environment:
+      - SERVICE_ID=1
+    command: gunicorn -b 0.0.0.0:7001 app:app
+    env_file:
+      - env/stock_service.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "7001:7001"
+
+  stock-service-2:
+    build:
+      context: ./
+      dockerfile: ./stock/Dockerfile
+    image: stock:latest
+    environment:
+      - SERVICE_ID=3
+    command: gunicorn -b 0.0.0.0:7002 app:app
+    env_file:
+      - env/stock_service.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "7002:7002"
+
+  stock-service-3:
+    build:
+      context: ./
+      dockerfile: ./stock/Dockerfile
+    image: stock:latest
+    environment:
+      - SERVICE_ID=2
+    command: gunicorn -b 0.0.0.0:7003 app:app
+    env_file:
+      - env/stock_service.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "7003:7003"
 
   stock-db:
     image: postgres
@@ -74,24 +150,60 @@ services:
       context: ./
       dockerfile: ./payment/Dockerfile
     image: user:latest
+    environment:
+      - SERVICE_ID=0
     command: gunicorn -b 0.0.0.0:6000 app:app
     env_file:
       - env/payment_service.env
+    depends_on:
+      - order-service-0
     ports:
       - "6000:6000"
 
-#  payment-service-1:
-#    build:
-#      context: ./
-#      dockerfile: ./payment/Dockerfile
-#    image: user:latest
-#    command: gunicorn -b 0.0.0.0:6001 app:app
-#    environment:
-#      - ID=1
-#    env_file:
-#      - env/payment_service.env
-#    ports:
-#      - "6001:6001"
+  payment-service-1:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    image: user:latest
+    command: gunicorn -b 0.0.0.0:6001 app:app
+    environment:
+      - SERVICE_ID=1
+    env_file:
+      - env/payment_service.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "6001:6001"
+
+  payment-service-2:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    image: user:latest
+    command: gunicorn -b 0.0.0.0:6002 app:app
+    environment:
+      - SERVICE_ID=2
+    env_file:
+      - env/payment_service.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "6002:6002"
+
+  payment-service-3:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    image: user:latest
+    command: gunicorn -b 0.0.0.0:6003 app:app
+    environment:
+      - SERVICE_ID=3
+    env_file:
+      - env/payment_service.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "6003:6003"
 
   payment-db:
     image: postgres
@@ -114,6 +226,11 @@ services:
       - zookeeper
     ports:
       - "29092:29092"
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--list", "--zookeeper", "zookeeper:2181"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
