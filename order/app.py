@@ -34,7 +34,7 @@ def order_as_json(order):
 
 
 def get_shard(order_id):
-    hashed = hashlib.shake_256(order_id.encode())
+    hashed = hashlib.shake_256(str(order_id).encode())
     # Get 6 character order_id hash
     shortened = hashed.digest(6)
     # use the order_id to get a node key
@@ -121,7 +121,7 @@ def find_order(order_id):
         cost = content_as_dict['cost']
         available_stock = content_as_dict['available_stock']
 
-    updated_order = database.update_cost(order_id, cost)
+    updated_order = database.update_cost(order_id, cost, node)
 
     filtered_items = []
 
@@ -159,10 +159,12 @@ def checkout(order_id):
     item_ids = order_json["items"]
 
     if not item_ids:
+        print(f"Order {order_id} does not contain any items.")
         return f"Order {order_id} does not contain any items.", 400
 
     if "not_enough_stock" in order_json:
         items_out_of_stock = order_json["not_enough_stock"]["items"]
+        print(f"Items: {items_out_of_stock} do not have enough stock available.")
         return f"Items: {items_out_of_stock} do not have enough stock available.", 400
 
     req_id = coordinator.checkout(order_id, item_ids, order_json["user_id"], order_json["total_cost"])

@@ -10,12 +10,13 @@ from scripts import *
 
 import psycopg2
 
+
 def connect_to_postgres(db_conf):
     conn = psycopg2.connect(**db_conf)
     return conn
 
-class _DatabaseConnection:
 
+class _DatabaseConnection:
     DATABASE_CLIENTS = {
         "5101": {
             "host": "order-db-1",
@@ -121,6 +122,7 @@ class _DatabaseConnection:
 
     def get_node(self, key):
         return self.hash_ring.get(key)["hostname"]
+
 
 def attempt_connect(retries=3, timeout=15000) -> _DatabaseConnection:
     while retries > 0:

@@ -12,6 +12,7 @@ import os
 
 app = Flask("payment-service")
 database = attempt_connect()
+database = attempt_connect()
 communicator = communication.try_connect()
 
 threading.Thread(target=lambda: communicator.start_listening()).start()
@@ -29,7 +30,7 @@ def increment_id():
 
 
 def get_shard(user_id):
-    hashed = hashlib.shake_256(user_id.encode())
+    hashed = hashlib.shake_256(str(user_id).encode())
     # Get 6 character order_id hash
     shortened = hashed.digest(6)
     # use the order_id to get a node key
@@ -73,16 +74,20 @@ def add_credit(user_id: str, amount: float):
 
 @app.post('/pay/<user_id>/<order_id>/<amount>')
 def remove_credit(user_id: str, order_id: str, amount: float):
+    node = get_shard(user_id)
     try:
-        node = get_shard(user_id)
         res = database.remove_credit(user_id, amount, node)
         if res is None:
             return f"User with id: {user_id} not found", 400
+
     except IntegrityError as e:
+        print("got here 5")
         print(e)
+        print("got here 6")
         return f"Not enough funds", 400
 
-    database.create_payment(user_id, order_id, amount)
+    database.create_payment(user_id, order_id, amount, node)
+
     return {
                "Success": True
            }, 200

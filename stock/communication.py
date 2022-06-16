@@ -10,6 +10,8 @@ from database import attempt_connect
 
 import json
 
+import hashlib
+
 import collections
 
 
@@ -40,7 +42,32 @@ class _Communicator:
                     msg_obj = msg_value["obj"]
                     item_ids = msg_obj["item_ids"]
                     counts = dict(collections.Counter(item_ids))
-                    self._db_connection.remove_stock_request(_id, counts)
+
+                    shard_and_items = {}  # {shard: items_in_shard}
+
+                    for item_id in item_ids:
+
+                        hashed = hashlib.shake_256(str(item_id).encode())
+                        shortened = hashed.digest(6)
+                        shard = self._db_connection.get_node(shortened)
+
+                        if shard not in shard_and_items:
+                            shard_and_items[shard] = [item_id]
+                        else:
+                            shard_and_items[shard].append(item_id)
+
+                    item_counts_per_shard = {}
+
+                    for shard, items in shard_and_items.items():
+                        for item_id in items:
+                            if shard not in item_counts_per_shard:
+                                item_counts_per_shard[shard] = {item_id: counts[item_id]}
+                            else:
+                                item_counts_per_shard[shard][item_id] = counts[item_id]
+
+                    for node, shard_counts in item_counts_per_shard.items():
+                        self._db_connection.remove_stock_request(_id, shard_counts, node)
+
                 elif msg_command == COMMIT_TRANSACTION:
                     self._db_connection.commit_transaction(_id)
                 elif msg_command == ROLLBACK_TRANSACTION:

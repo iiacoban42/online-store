@@ -103,7 +103,9 @@ class Coordinator:
         _id = str(uuid.uuid4())
         self.running_requests[_id] = Status.STARTED
         self.communicator.start_payment(_id, sc.PaymentRequest(order_id, user_id, amount))
+        print("payment")
         self.communicator.start_remove_stock(_id, sc.StockRequest(order_id, item_ids))
+        print("stock")
         return _id
 
     def wait_result(self, _id, timeout=5):
@@ -113,13 +115,20 @@ class Coordinator:
         while time.monotonic() < t_end:
             state = self.running_requests[_id]
             if _id not in self.running_requests:
+                print("NOT RUNNING")
                 return result
             if state.has_flag(Status.ERROR | Status.ROLLBACK_SENT):
+                print("ERROR, ROLLBACK")
                 break
             if state.has_flag(Status.FINISHED):
+                print("FINISHED")
                 result = True
                 break
         # TODO: Timeout -> check for any open transactions and roll them back
+
         print(f"final state: {self.running_requests[_id]}")
+
+        print("TIMEOUT")
+
         self.running_requests.pop(_id)
         return result

@@ -8,6 +8,8 @@ from kafka.errors import NoBrokersAvailable
 from shared.communication import *
 from database import attempt_connect
 
+import hashlib
+
 import json
 
 
@@ -36,7 +38,11 @@ class _Communicator:
             try:
                 if msg_command == BEGIN_TRANSACTION:
                     msg_obj = msg_value["obj"]
-                    self._db_connection.prepare_payment(_id, msg_obj["user_id"], msg_obj["order_id"], msg_obj["amount"])
+                    user_id = msg_obj["user_id"]
+                    hashed = hashlib.shake_256(str(user_id).encode())
+                    shortened = hashed.digest(6)
+                    node = self._db_connection.get_node(shortened)
+                    self._db_connection.prepare_payment(_id, msg_obj["user_id"], msg_obj["order_id"], msg_obj["amount"], node)
                 elif msg_command == COMMIT_TRANSACTION:
                     self._db_connection.commit_transaction(_id)
                 elif msg_command == ROLLBACK_TRANSACTION:

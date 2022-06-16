@@ -32,7 +32,7 @@ def increment_id():
 
 
 def get_shard(item_id):
-    hashed = hashlib.shake_256(item_id.encode())
+    hashed = hashlib.shake_256(str(item_id).encode())
     # Get 6 character order_id hash
     shortened = hashed.digest(6)
     # use the order_id to get a node key
@@ -108,7 +108,7 @@ def calculate_cost(item_ids: str):
         if shard not in shard_and_items:
             shard_and_items[shard] = [item]
         else:
-            shard_and_items[shard].add(item)
+            shard_and_items[shard].append(item)
 
     for shard, shard_items in shard_and_items.items():
         shard_cost, shard_available_stock = database.calculate_cost(shard_items, shard)

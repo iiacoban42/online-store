@@ -16,6 +16,7 @@ def connect_to_postgres(db_conf):
     conn = psycopg2.connect(**db_conf)
     return conn
 
+
 class _DatabaseConnection:
     DATABASE_CLIENTS = {
         "5201": {
@@ -139,6 +140,9 @@ class _DatabaseConnection:
 
     def rollback_transaction(self, xid, node):
         self.db[node].tpc_rollback(xid)
+
+    def get_node(self, key):
+        return self.hash_ring.get(key)["hostname"]
 
 
 def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:
