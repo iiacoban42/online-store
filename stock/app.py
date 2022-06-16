@@ -6,6 +6,8 @@ import hashlib
 from database import *
 import communication
 
+import os
+
 app = Flask("stock-service")
 
 database = attempt_connect()
@@ -13,24 +15,26 @@ database = attempt_connect()
 communicator = communication.try_connect()
 threading.Thread(target=lambda: communicator.start_listening()).start()
 
-BACKUP_FILE = "stock/item_id.json"
+BACKUP_FILE = os.getcwd() + "/item_id.json"
 
-with open(BACKUP_FILE, "w", encoding="utf8") as file:
+with open(BACKUP_FILE, "r", encoding="utf8") as file:
     ITEM_ID = json.load(file)
+
 
 def increment_id():
     ITEM_ID["item_id"] += 1
     with open(BACKUP_FILE, "w", encoding="utf8") as file:
         json.dump(ITEM_ID, file)
 
-def get_shard(item_id):
 
+def get_shard(item_id):
     hashed = hashlib.shake_256(item_id.encode())
     # Get 6 character order_id hash
     shortened = hashed.digest(6)
     # use the order_id to get a node key
     node = database.get_node(shortened)
     return node
+
 
 @app.post('/item/create/<price>')
 def create_item(price: int):
@@ -80,7 +84,7 @@ def calculate_cost(item_ids: str):
     items = item_ids.split(",")
     items = list(map(int, items))
 
-    shard_and_items = {} # {shard: items_in_shard}
+    shard_and_items = {}  # {shard: items_in_shard}
     cost = 0
     available_stock = []
 

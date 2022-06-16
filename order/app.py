@@ -5,20 +5,23 @@ from flask import Flask
 import hashlib
 from database import *
 from coordinator import Coordinator
+import os
 
 app = Flask("order-service")
 database = attempt_connect()
 coordinator = Coordinator()
 
-BACKUP_FILE = "order/order_id.json"
+BACKUP_FILE = os.getcwd() + "/order_id.json"
 
-with open(BACKUP_FILE, "w", encoding="utf8") as file:
+with open(BACKUP_FILE, "r", encoding="utf8") as file:
     ORDER_ID = json.load(file)
+
 
 def increment_id():
     ORDER_ID["order_id"] += 1
     with open(BACKUP_FILE, "w", encoding="utf8") as file:
         json.dump(ORDER_ID, file)
+
 
 def order_as_json(order):
     return {
@@ -29,8 +32,8 @@ def order_as_json(order):
         "total_cost": order[4]
     }
 
-def get_shard(order_id):
 
+def get_shard(order_id):
     hashed = hashlib.shake_256(order_id.encode())
     # Get 6 character order_id hash
     shortened = hashed.digest(6)
@@ -42,7 +45,7 @@ def get_shard(order_id):
 @app.post('/create/<user_id>')
 def create_order(user_id):
     if user_id is not None:
-        request = "http://host.docker.internal:5001/check_user/" + user_id
+        request = "http://host.docker.internal:5300/check_user/" + user_id
         response = requests.get(request)
 
         content = response.content
@@ -108,7 +111,7 @@ def find_order(order_id):
         for i in item_ids:
             items += str(i) + ","
         items = items[:len(items) - 1]
-        request = "http://host.docker.internal:5002/calculate_cost/" + items
+        request = "http://host.docker.internal:5200/calculate_cost/" + items
 
         response = requests.get(request)
 

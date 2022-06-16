@@ -8,16 +8,19 @@ from database import *
 import communication
 import json
 
+import os
+
 app = Flask("payment-service")
 database = attempt_connect()
 communicator = communication.try_connect()
 
 threading.Thread(target=lambda: communicator.start_listening()).start()
 
-BACKUP_FILE = "payment/user_id.json"
+BACKUP_FILE = os.getcwd() + "/user_id.json"
 
-with open(BACKUP_FILE, "w", encoding="utf8") as file:
+with open(BACKUP_FILE, "r", encoding="utf8") as file:
     USER_ID = json.load(file)
+
 
 def increment_id():
     USER_ID["user_id"] += 1
@@ -26,13 +29,13 @@ def increment_id():
 
 
 def get_shard(user_id):
-
     hashed = hashlib.shake_256(user_id.encode())
     # Get 6 character order_id hash
     shortened = hashed.digest(6)
     # use the order_id to get a node key
     node = database.get_node(shortened)
     return node
+
 
 @app.post('/create_user')
 def create_user():
@@ -79,8 +82,8 @@ def remove_credit(user_id: str, order_id: str, amount: float):
 
     new_payment = database.create_payment(user_id, order_id, amount, node)
     return {
-        "Success": True
-    }, 200
+               "Success": True
+           }, 200
 
 
 @app.post('/cancel/<user_id>/<order_id>')

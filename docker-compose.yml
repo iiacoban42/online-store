@@ -15,13 +15,13 @@ services:
     image: order:latest
     environment:
       - GATEWAY_URL=http://gateway:80
-    command: gunicorn -b 0.0.0.0:5000 app:app
+    command: gunicorn -b 0.0.0.0:5100 app:app
     env_file:
       - env/order_service_1.env
       - env/order_service_2.env
       - env/order_service_3.env
     ports:
-      - "5000:5000"
+      - "5100:5100"
 
   order-db-1:
     image: postgres
@@ -55,7 +55,7 @@ services:
       context: ./
       dockerfile: ./stock/Dockerfile
     image: stock:latest
-    command: gunicorn -b 0.0.0.0:5002 app:app
+    command: gunicorn -b 0.0.0.0:5200 app:app
     env_file:
       - env/stock_service_1.env
       - env/stock_service_2.env
@@ -95,7 +95,7 @@ services:
       context: ./
       dockerfile: ./payment/Dockerfile
     image: user:latest
-    command: gunicorn -b 0.0.0.0:5001 app:app
+    command: gunicorn -b 0.0.0.0:5300 app:app
     env_file:
       - env/payment_service_1.env
       - env/payment_service_2.env
