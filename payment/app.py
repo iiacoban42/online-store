@@ -81,9 +81,7 @@ def remove_credit(user_id: str, order_id: str, amount: float):
             return f"User with id: {user_id} not found", 400
 
     except IntegrityError as e:
-        print("got here 5")
         print(e)
-        print("got here 6")
         return f"Not enough funds", 400
 
     database.create_payment(user_id, order_id, amount, node)

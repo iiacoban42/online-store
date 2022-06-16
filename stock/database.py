@@ -68,13 +68,13 @@ class _DatabaseConnection:
     def create_item(self, item_price, item_id, node):
         try:
             cursor = self.cursor(node)
-                    cursor.execute(insert_item_script, (item_id, item_price,))
-                    new_item_id = cursor.fetchone()[0]
-                    self.commit(node)
+            cursor.execute(insert_item_script, (item_id, item_price,))
+            new_item_id = cursor.fetchone()[0]
+            self.commit(node)
         except Exception as e:
             raise e
         finally:
-            self.db.reset()
+            self.db[node].reset()
         return new_item_id
 
     def find_item(self, item_id, node):
@@ -91,18 +91,16 @@ class _DatabaseConnection:
         self.commit(node)
         return modified_item
 
-
-
     def remove_stock(self, item_id, amount, node):
         try:
             cursor = self.cursor(node)
-            cursor.execute(remove_item_stock_script, (amount, item_id, amount))
+            cursor.execute(remove_item_stock_script, (amount, item_id))
             modified_item = cursor.fetchone()
             self.commit(node)
         except Exception as e:
             raise e
         finally:
-            self.db.reset()
+            self.db[node].reset()
         return modified_item
 
     def remove_stock_request(self, xid, counts, node):
@@ -116,7 +114,6 @@ class _DatabaseConnection:
             raise e
         finally:
             self.db[node].reset()
-
 
     def calculate_cost(self, item_ids, node):
 

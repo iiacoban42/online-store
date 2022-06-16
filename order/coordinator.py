@@ -54,14 +54,16 @@ class Coordinator:
     def handle_payment_result(self, result):
         result_obj = result.value
         _id = result_obj["_id"]
+        shard = result_obj["shard"]
         self.set_new_state_payment(_id, result_obj)
-        self.do_next_action(_id)
+        self.do_next_action_payment(_id, shard)
 
     def handle_stock_result(self, result):
         result_obj = result.value
         _id = result_obj["_id"]
+        shard = result_obj["shard"]
         self.set_new_state_stock(_id, result_obj)
-        self.do_next_action(_id)
+        self.do_next_action_stock(_id, shard)
 
     def set_new_state_payment(self, _id, res_obj):
         result = res_obj["res"]
@@ -85,7 +87,7 @@ class Coordinator:
             print(f"FAIL stock: {_id} for {Status(res_obj['command'])}")
             self.running_requests[_id] |= Status.ERROR | Status.STOCK_FAIL
 
-    def do_next_action(self, _id):
+    def do_next_action_payment(self, _id, shard):
         state = self.running_requests[_id]
         if state.has_flag(Status.ERROR) and not state.has_flag(Status.ROLLBACK_SENT):
             self.communicator.rollback(_id, state.has_flag(Status.PAYMENT_FAIL), state.has_flag(Status.STOCK_FAIL))
@@ -96,7 +98,25 @@ class Coordinator:
             return
         if state.has_flag(Status.READY_FOR_COMMIT) and not state.has_flag(Status.COMMIT_SENT):
             print(f"COMMIT: {_id}")
-            self.communicator.commit_transaction(_id)
+            shard_obj = sc.ShardObj(shard)
+
+            self.communicator.commit_transaction_payment(_id, shard_obj)
+            self.running_requests[_id] |= Status.COMMIT_SENT
+
+    def do_next_action_stock(self, _id, shard):
+        state = self.running_requests[_id]
+        if state.has_flag(Status.ERROR) and not state.has_flag(Status.ROLLBACK_SENT):
+            self.communicator.rollback(_id, state.has_flag(Status.PAYMENT_FAIL), state.has_flag(Status.STOCK_FAIL))
+            self.running_requests[_id] |= Status.ROLLBACK_SENT
+            return
+        if state.has_flag(Status.FINISHED):
+            print(f"FINISHED: {_id}")
+            return
+        if state.has_flag(Status.READY_FOR_COMMIT) and not state.has_flag(Status.COMMIT_SENT):
+            print(f"COMMIT: {_id}")
+            shard_obj = sc.ShardObj(shard)
+
+            self.communicator.commit_transaction_stock(_id, shard_obj)
             self.running_requests[_id] |= Status.COMMIT_SENT
 
     def checkout(self, order_id, item_ids, user_id, amount):

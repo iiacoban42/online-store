@@ -20,19 +20,21 @@ def command(_id, command_number, obj=None):
     }
 
 
-def success(_id, command_number):
+def success(_id, command_number, shard):
     return {
         "_id": _id,
         "command": command_number,
-        "res": SUCCESS
+        "res": SUCCESS,
+        "shard": shard
     }
 
 
-def fail(_id, command_number):
+def fail(_id, command_number, shard):
     return {
         "_id": _id,
         "command": command_number,
-        "res": FAIL
+        "res": FAIL,
+        "shard": shard
     }
 
 

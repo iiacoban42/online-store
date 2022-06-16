@@ -36,28 +36,31 @@ class _Communicator:
             _id = msg_value["_id"]
             msg_command = msg_value["command"]
             try:
+                msg_obj = msg_value["obj"]
+                ######
+                # need user_id here somehow (not always in msg_obj)
+                ######
+                user_id = msg_obj["user_id"]
+                hashed = hashlib.shake_256(str(user_id).encode())
+                shortened = hashed.digest(6)
+                node = self._db_connection.get_node(shortened)
                 if msg_command == BEGIN_TRANSACTION:
-                    msg_obj = msg_value["obj"]
-                    user_id = msg_obj["user_id"]
-                    hashed = hashlib.shake_256(str(user_id).encode())
-                    shortened = hashed.digest(6)
-                    node = self._db_connection.get_node(shortened)
                     self._db_connection.prepare_payment(_id, msg_obj["user_id"], msg_obj["order_id"], msg_obj["amount"], node)
                 elif msg_command == COMMIT_TRANSACTION:
-                    self._db_connection.commit_transaction(_id)
+                    self._db_connection.commit_transaction(_id, node)
                 elif msg_command == ROLLBACK_TRANSACTION:
-                    self._db_connection.rollback_transaction(_id)
+                    self._db_connection.rollback_transaction(_id, node)
                 else:
-                    self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
+                    self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"], node))
                     return
-                self._payment_producer.send(PAYMENT_RESULTS_TOPIC, success(_id, msg.value["command"]))
+                self._payment_producer.send(PAYMENT_RESULTS_TOPIC, success(_id, msg.value["command"], node))
             except psycopg2.Error as e:
                 print(f"--PAYMENT_{_id}--")
                 print(f"PG Error: {e.pgerror}")
                 print(f"Error: {e}")
                 print(f"Message: {msg_value}")
                 print("-----")
-                self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
+                self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"], -1))
 
 
 def try_connect(retries=3, timeout=2000) -> _Communicator:
