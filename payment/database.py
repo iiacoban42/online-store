@@ -14,8 +14,8 @@ def connect_to_postgres(db_conf):
     conn = psycopg2.connect(**db_conf)
     return conn
 
-class _DatabaseConnection:
 
+class _DatabaseConnection:
     DATABASE_CLIENTS = {
         "5301": {
             "host": "payment-db-1",
@@ -72,7 +72,7 @@ class _DatabaseConnection:
 
     def find_user(self, user_id, node):
         cursor = self.cursor(node)
-        cursor.execute(user_find_script, (user_id, ))
+        cursor.execute(user_find_script, (user_id,))
         user = cursor.fetchone()
         self.commit(node)
         if user is None:
@@ -83,21 +83,20 @@ class _DatabaseConnection:
         cursor = self.cursor(node)
         cursor.execute(user_add_credit_script, (amount, user_id))
         modified_item = cursor.fetchone()
-        self.commit()
+        self.commit(node)
         return modified_item
 
-    def remove_credit(self, user_id, amount):
+    def remove_credit(self, user_id, amount, node):
         try:
-            cursor = self.cursor()
+            cursor = self.cursor(node)
             cursor.execute(user_remove_credit_script, (amount, user_id))
             modified_item = cursor.fetchone()
-            self.commit()
+            self.commit(node)
         except Exception as e:
             raise e
         finally:
-            self.db.reset()
+            self.db[node].reset()
         return modified_item
-
 
     def create_payment(self, user_id: str, order_id: str, amount: int, node):
         cursor = self.cursor(node)

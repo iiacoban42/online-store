@@ -62,9 +62,9 @@ def find_user(user_id: str):
 
 
 @app.post('/add_funds/<user_id>/<amount>')
-
 def add_credit(user_id: str, amount: float):
-    res = database.add_credit(user_id, amount)
+    node = get_shard(user_id)
+    res = database.add_credit(user_id, amount, node)
     if res is None:
         return f"User {user_id} was not found.", 400
 
@@ -73,15 +73,14 @@ def add_credit(user_id: str, amount: float):
 
 @app.post('/pay/<user_id>/<order_id>/<amount>')
 def remove_credit(user_id: str, order_id: str, amount: float):
-    node = get_shard(user_id)
     try:
-        res = database.remove_credit(user_id, amount)
+        node = get_shard(user_id)
+        res = database.remove_credit(user_id, amount, node)
         if res is None:
             return f"User with id: {user_id} not found", 400
     except IntegrityError as e:
         print(e)
         return f"Not enough funds", 400
-
 
     database.create_payment(user_id, order_id, amount)
     return {
