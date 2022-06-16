@@ -17,30 +17,30 @@ def connect_to_postgres(db_conf):
 class _DatabaseConnection:
 
     DATABASE_CLIENTS = {
-        "5433": {
-            "host": os.environ['POSTGRES_HOST'],
-            "port": "5433",
+        "5301": {
+            "host": "payment-db-1",
+            "port": "5301",
             "database": os.environ['POSTGRES_DB'],
             "user": os.environ['POSTGRES_USER'],
             "password": os.environ['POSTGRES_PASSWORD']
         },
-        "5434": {
-            "host": os.environ['POSTGRES_HOST'],
-            "port": "5434",
+        "5302": {
+            "host": "payment-db-2",
+            "port": "5302",
             "database": os.environ['POSTGRES_DB'],
             "user": os.environ['POSTGRES_USER'],
             "password": os.environ['POSTGRES_PASSWORD']
         },
-        "5435": {
-            "host": os.environ['POSTGRES_HOST'],
-            "port": "5435",
+        "5303": {
+            "host": "payment-db-3",
+            "port": "5303",
             "database": os.environ['POSTGRES_DB'],
             "user": os.environ['POSTGRES_USER'],
             "password": os.environ['POSTGRES_PASSWORD']
         },
     }
 
-    hash_ring = HashRing(nodes=["5433", "5434", "5435"])
+    hash_ring = HashRing(nodes=["5301", "5302", "5303"])
 
     def __init__(self):
         self.db = {}

@@ -14,4 +14,4 @@ RUN apt-get update \
 COPY ./stock .
 COPY ./shared ./shared
 
-EXPOSE 5002
+EXPOSE 5300

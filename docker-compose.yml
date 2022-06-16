@@ -17,18 +17,20 @@ services:
       - GATEWAY_URL=http://gateway:80
     command: gunicorn -b 0.0.0.0:5000 app:app
     env_file:
-      - env/order_service.env
+      - env/order_service_1.env
+      - env/order_service_2.env
+      - env/order_service_3.env
     ports:
-    - "5000:5000"
+      - "5000:5000"
 
-  order-db:
+  order-db-1:
     image: postgres
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
     ports:
-      - 5433:5433
-    command: -p 5433
+      - 5101:5101
+    command: -p 5101
 
   order-db-2:
     image: postgres
@@ -36,8 +38,8 @@ services:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
     ports:
-      - 5434:5434
-    command: -p 5434
+      - 5102:5102
+    command: -p 5102
 
   order-db-3:
     image: postgres
@@ -45,63 +47,107 @@ services:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
     ports:
-      - 5435:5435
-    command: -p 5435
+      - 5103:5103
+    command: -p 5103
 
-  # stock-service:
-  #   build:
-  #     context: ./
-  #     dockerfile: ./stock/Dockerfile
-  #   image: stock:latest
-  #   command: gunicorn -b 0.0.0.0:5002 app:app
-  #   env_file:
-  #     - env/stock_service.env
-  #   ports:
-  #     - "5002:5002"
+  stock-service:
+    build:
+      context: ./
+      dockerfile: ./stock/Dockerfile
+    image: stock:latest
+    command: gunicorn -b 0.0.0.0:5002 app:app
+    env_file:
+      - env/stock_service_1.env
+      - env/stock_service_2.env
+      - env/stock_service_3.env
+    ports:
+      - "5200:5200"
 
-  # stock-db:
-  #   image: postgres
-  #   command: postgres --max_prepared_transactions=100
-  #   environment:
-  #     POSTGRES_PASSWORD: test123
-  #     POSTGRES_DB: 0
+  stock-db-1:
+    image: postgres
+    command: postgres -p 5201 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - 5201:5201
 
-  # payment-service:
-  #   build:
-  #     context: ./
-  #     dockerfile: ./payment/Dockerfile
-  #   image: user:latest
-  #   command: gunicorn -b 0.0.0.0:5001 app:app
-  #   env_file:
-  #     - env/payment_service.env
-  #   ports:
-  #     - "5001:5001"
+  stock-db-2:
+    image: postgres
+    command: postgres -p 5202 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - 5202:5202
 
-  # payment-db:
-  #   image: postgres
-  #   command: postgres --max_prepared_transactions=100
-  #   environment:
-  #     POSTGRES_PASSWORD: test123
-  #     POSTGRES_DB: 0
+  stock-db-3:
+    image: postgres
+    command: postgres -p 5203 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - 5203:5203
 
-  # zookeeper:
-  #   image: confluentinc/cp-zookeeper:latest
-  #   environment:
-  #     ZOOKEEPER_CLIENT_PORT: 2181
-  #     ZOOKEEPER_TICK_TIME: 2000
-  #   ports:
-  #     - "22181:2181"
+  payment-service:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    image: user:latest
+    command: gunicorn -b 0.0.0.0:5001 app:app
+    env_file:
+      - env/payment_service_1.env
+      - env/payment_service_2.env
+      - env/payment_service_3.env
+    ports:
+      - "5300:5300"
 
-  # kafka:
-  #   image: confluentinc/cp-kafka:latest
-  #   depends_on:
-  #     - zookeeper
-  #   ports:
-  #     - "29092:29092"
-  #   environment:
-  #     KAFKA_BROKER_ID: 1
-  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  payment-db-1:
+    image: postgres
+    command: postgres -p 5301 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - 5301:5301
+
+  payment-db-2:
+    image: postgres
+    command: postgres -p 5302 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - 5302:5302
+
+  payment-db-3:
+    image: postgres
+    command: postgres -p 5303 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - 5303:5303
+
+  zookeeper:
+   image: confluentinc/cp-zookeeper:latest
+   environment:
+     ZOOKEEPER_CLIENT_PORT: 2181
+     ZOOKEEPER_TICK_TIME: 2000
+   ports:
+     - "22181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
