@@ -46,9 +46,11 @@ class _Communicator:
                     return
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, success(_id, msg.value["command"]))
             except psycopg2.Error as e:
+                print(f"--PAYMENT_{_id}--")
                 print(f"PG Error: {e.pgerror}")
                 print(f"Error: {e}")
                 print(f"Message: {msg_value}")
+                print("-----")
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
 
 

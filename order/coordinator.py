@@ -8,7 +8,7 @@ import shared.communication as sc
 
 
 class Status(Flag):
-    STARTED = 0
+    STARTED = 512
     ERROR = 1
     PAYMENT_PREPARED = 2
     PAYMENT_COMMITTED = 4
@@ -16,6 +16,8 @@ class Status(Flag):
     STOCK_COMMITTED = 16
     ROLLBACK_SENT = 32
     COMMIT_SENT = 64
+    PAYMENT_FAIL = 128
+    STOCK_FAIL = 256
     FINISHED = PAYMENT_COMMITTED | STOCK_COMMITTED
     READY_FOR_COMMIT = PAYMENT_PREPARED | STOCK_PREPARED
 
@@ -37,7 +39,6 @@ class Coordinator:
 
     def listen_results(self):
         results_consumer = self.communicator.results()
-        print("listening")
         while True:
             try:
                 topic_queues = results_consumer.poll(5000)
@@ -48,7 +49,7 @@ class Coordinator:
                     for msg in message_queue:
                         self.result_func_dict[msg.topic](msg)
             except Exception as e:
-                print(e)
+                print(f"LISTENING exception: {e}")
 
     def handle_payment_result(self, result):
         result_obj = result.value
@@ -70,8 +71,8 @@ class Coordinator:
             elif res_obj["command"] == sc.COMMIT_TRANSACTION:
                 self.running_requests[_id] |= Status.PAYMENT_COMMITTED
         elif result == sc.FAIL:
-            print(f"payment error for command {res_obj['command']}")
-            self.running_requests[_id] |= Status.ERROR
+            print(f"FAIL payment: {_id} for {Status(res_obj['command'])}")
+            self.running_requests[_id] |= Status.ERROR | Status.PAYMENT_FAIL
 
     def set_new_state_stock(self, _id, res_obj):
         result = res_obj["res"]
@@ -81,22 +82,20 @@ class Coordinator:
             elif res_obj["command"] == sc.COMMIT_TRANSACTION:
                 self.running_requests[_id] |= Status.STOCK_COMMITTED
         elif result == sc.FAIL:
-            print(f"stock error for command {res_obj['command']}")
-            self.running_requests[_id] |= Status.ERROR
+            print(f"FAIL stock: {_id} for {Status(res_obj['command'])}")
+            self.running_requests[_id] |= Status.ERROR | Status.STOCK_FAIL
 
     def do_next_action(self, _id):
         state = self.running_requests[_id]
-        print(state)
         if state.has_flag(Status.ERROR) and not state.has_flag(Status.ROLLBACK_SENT):
-            print("rolling back")
-            self.communicator.rollback(_id)
+            self.communicator.rollback(_id, state.has_flag(Status.PAYMENT_FAIL), state.has_flag(Status.STOCK_FAIL))
             self.running_requests[_id] |= Status.ROLLBACK_SENT
             return
         if state.has_flag(Status.FINISHED):
-            print("finished")
+            print(f"FINISHED: {_id}")
             return
         if state.has_flag(Status.READY_FOR_COMMIT) and not state.has_flag(Status.COMMIT_SENT):
-            print("committing")
+            print(f"COMMIT: {_id}")
             self.communicator.commit_transaction(_id)
             self.running_requests[_id] |= Status.COMMIT_SENT
 
@@ -107,10 +106,11 @@ class Coordinator:
         self.communicator.start_remove_stock(_id, sc.StockRequest(order_id, item_ids))
         return _id
 
-    def wait_result(self, _id, timeout=5000):
-        start = time.time() * 1000
+    def wait_result(self, _id, timeout=5):
+        t_end = time.monotonic() + timeout
         result = False
-        while time.time() * 1000 < start + timeout:
+        print(f"---{_id}--")
+        while time.monotonic() < t_end:
             state = self.running_requests[_id]
             if _id not in self.running_requests:
                 return result
@@ -120,5 +120,6 @@ class Coordinator:
                 result = True
                 break
         # TODO: Timeout -> check for any open transactions and roll them back
+        print(f"final state: {self.running_requests[_id]}")
         self.running_requests.pop(_id)
         return result

@@ -1,8 +1,12 @@
 import threading
 
 from flask import Flask
+
 import json
 import hashlib
+
+from psycopg2 import ProgrammingError, IntegrityError
+
 from database import *
 import communication
 
@@ -38,11 +42,16 @@ def get_shard(item_id):
 
 @app.post('/item/create/<price>')
 def create_item(price: int):
-    item_id = ITEM_ID["item_id"]
-    node = get_shard(item_id)
 
-    new_item_id = database.create_item(price, item_id, node)
-    increment_id()
+    try:
+        item_id = ITEM_ID["item_id"]
+        node = get_shard(item_id)
+        new_item_id = database.create_item(price, item_id, node)
+        increment_id()
+    except IntegrityError as e:
+        print(e)
+        return f"Price cannot be negative", 400
+
     return {
                "item_id": new_item_id
            }, 200
@@ -53,7 +62,7 @@ def find_item(item_id: str):
     node = get_shard(item_id)
     item = database.find_item(item_id, node)
     if item is None:
-        return f"Item: {item_id} not found.", 400
+        return f"Not found.", 400
     return {
                "item_id": item[0],
                "price": item[1],
@@ -72,9 +81,15 @@ def add_stock(item_id: str, amount: int):
 
 @app.post('/subtract/<item_id>/<amount>')
 def remove_stock(item_id: str, amount: int):
-    node = get_shard(item_id)
-    if database.remove_stock(item_id, amount, node) is None:
-        return f"Cannot deduct {amount}, from {item_id}. Not enough stock, or item was not found.", 400
+
+    try:
+        node = get_shard(item_id)
+            if database.remove_stock(item_id, amount, node) is None:
+                return f"Cannot deduct {amount}, from {item_id}. Not enough stock, or item was not found.", 400
+    except IntegrityError as e:
+        print(e)
+        return f"Not enough stock", 400
+
 
     return f"Success. Deducted {amount} from item: {item_id}.", 200
 

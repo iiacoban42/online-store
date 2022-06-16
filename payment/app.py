@@ -62,25 +62,28 @@ def find_user(user_id: str):
 
 
 @app.post('/add_funds/<user_id>/<amount>')
-def add_credit(user_id: str, amount: int):
-    node = get_shard(user_id)
-    database.add_credit(user_id, amount, node)
-    return f"Added {amount} credits to user {user_id}.", 200
+
+def add_credit(user_id: str, amount: float):
+    res = database.add_credit(user_id, amount)
+    if res is None:
+        return f"User {user_id} was not found.", 400
+
+    return f"Success. Added {amount} credits to user: {user_id}.", 200
 
 
 @app.post('/pay/<user_id>/<order_id>/<amount>')
 def remove_credit(user_id: str, order_id: str, amount: float):
     node = get_shard(user_id)
     try:
-        database.remove_credit(user_id, amount, node)
-    except ProgrammingError as e:
-        print(e)
-        return f"User with id: {user_id} not found", 400
+        res = database.remove_credit(user_id, amount)
+        if res is None:
+            return f"User with id: {user_id} not found", 400
     except IntegrityError as e:
         print(e)
         return f"Not enough funds", 400
 
-    new_payment = database.create_payment(user_id, order_id, amount, node)
+
+    database.create_payment(user_id, order_id, amount)
     return {
                "Success": True
            }, 200

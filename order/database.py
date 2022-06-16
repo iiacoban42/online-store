@@ -122,7 +122,7 @@ class _DatabaseConnection:
     def get_node(self, key):
         return self.hash_ring.get(key)["hostname"]
 
-def attempt_connect(retries=3, timeout=2000) -> _DatabaseConnection:
+def attempt_connect(retries=3, timeout=15000) -> _DatabaseConnection:
     while retries > 0:
         try:
             return _DatabaseConnection()

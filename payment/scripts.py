@@ -24,7 +24,7 @@ user_insert_script = "INSERT INTO public.\"Users\" (user_id, credit) VALUES (%s,
 
 user_find_script = "SELECT * FROM public.\"Users\" WHERE user_id = %s;"
 
-user_add_credit_script = "UPDATE public.\"Users\" SET credit = credit + %s WHERE user_id = %s;"
+user_add_credit_script = "UPDATE public.\"Users\" SET credit = credit + %s WHERE user_id = %s RETURNING credit;"
 
 user_remove_credit_script = "UPDATE public.\"Users\" SET credit = credit - %s WHERE user_id = %s RETURNING credit;"
 

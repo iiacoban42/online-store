@@ -64,12 +64,16 @@ class _DatabaseConnection:
         self.cursor(node).execute(create_table_script)
         self.commit(node)
 
-
     def create_item(self, item_price, item_id, node):
-        cursor = self.cursor(node)
-        cursor.execute(insert_item_script, (item_id, item_price,))
-        new_item_id = cursor.fetchone()[0]
-        self.commit(node)
+        try:
+            cursor = self.cursor(node)
+                    cursor.execute(insert_item_script, (item_id, item_price,))
+                    new_item_id = cursor.fetchone()[0]
+                    self.commit(node)
+        except Exception as e:
+            raise e
+        finally:
+            self.db.reset()
         return new_item_id
 
     def find_item(self, item_id, node):
@@ -86,20 +90,32 @@ class _DatabaseConnection:
         self.commit(node)
         return modified_item
 
+
+
     def remove_stock(self, item_id, amount, node):
-        cursor = self.cursor(node)
-        cursor.execute(remove_item_stock_script, (amount, item_id, amount))
-        modified_item = cursor.fetchone()
-        self.commit(node)
+        try:
+            cursor = self.cursor(node)
+            cursor.execute(remove_item_stock_script, (amount, item_id, amount))
+            modified_item = cursor.fetchone()
+            self.commit(node)
+        except Exception as e:
+            raise e
+        finally:
+            self.db.reset()
         return modified_item
 
     def remove_stock_request(self, xid, counts, node):
-        self.db[node].tpc_begin(xid)
-        cursor = self.cursor(node)
-        for i in counts:
-            cursor.execute(remove_item_stock_script, (counts[i], i, counts[i]))
-        self.db[node].tpc_prepare()
-        self.db[node].reset()
+        try:
+            self.db[node].tpc_begin(xid)
+            cursor = self.cursor(node)
+            for _id, count in counts.items():
+                cursor.execute(remove_item_stock_script, (count, _id))
+            self.db[node].tpc_prepare()
+        except Exception as e:
+            raise e
+        finally:
+            self.db[node].reset()
+
 
     def calculate_cost(self, item_ids, node):
 

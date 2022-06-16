@@ -57,12 +57,14 @@ class _Communicator:
             value=command(_id, COMMIT_TRANSACTION)
         )
 
-    def rollback(self, _id):
+    def rollback(self, _id, payment, stock):
+        print(f"ROLLBACK STOCK: {_id}")
         self._stock_producer.send(
             STOCK_REQUEST_TOPIC,
             value=command(_id, ROLLBACK_TRANSACTION)
         )
 
+        print(f"ROLLBACK PAYMENT: {_id}")
         self._payment_producer.send(
             PAYMENT_REQUEST_TOPIC,
             value=command(_id, ROLLBACK_TRANSACTION)
