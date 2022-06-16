@@ -20,6 +20,9 @@ class Status(Flag):
     STOCK_FAIL = 256
     FINISHED = PAYMENT_COMMITTED | STOCK_COMMITTED
     READY_FOR_COMMIT = PAYMENT_PREPARED | STOCK_PREPARED
+    STOCK_ROLLBACK = STOCK_PREPARED | PAYMENT_FAIL
+    PAYMENT_ROLLBACK = STOCK_FAIL | PAYMENT_PREPARED
+    FULL_FAIL = STOCK_FAIL | PAYMENT_FAIL
 
     def has_flag(self, flag: Flag):
         return self & flag == flag
@@ -49,19 +52,29 @@ class Coordinator:
                     for msg in message_queue:
                         self.result_func_dict[msg.topic](msg)
             except Exception as e:
-                print(f"LISTENING exception: {e}")
+                print(f"LISTENING exception: {type(e).__name__} {e}")
 
     def handle_payment_result(self, result):
-        result_obj = result.value
-        _id = result_obj["_id"]
-        self.set_new_state_payment(_id, result_obj)
-        self.do_next_action(_id)
+        try:
+            result_obj = result.value
+            _id = result_obj["_id"]
+            self.set_new_state_payment(_id, result_obj)
+            self.do_next_action(_id)
+        except KeyError:
+            print(f"Key Error payment ---------------")
+            print(result)
+            print("--------------------------")
 
     def handle_stock_result(self, result):
-        result_obj = result.value
-        _id = result_obj["_id"]
-        self.set_new_state_stock(_id, result_obj)
-        self.do_next_action(_id)
+        try:
+            result_obj = result.value
+            _id = result_obj["_id"]
+            self.set_new_state_stock(_id, result_obj)
+            self.do_next_action(_id)
+        except KeyError:
+            print(f"Key Error stock ---------------")
+            print(result)
+            print("--------------------------")
 
     def set_new_state_payment(self, _id, res_obj):
         result = res_obj["res"]
@@ -72,7 +85,7 @@ class Coordinator:
                 self.running_requests[_id] |= Status.PAYMENT_COMMITTED
         elif result == sc.FAIL:
             print(f"FAIL payment: {_id} for {Status(res_obj['command'])}")
-            self.running_requests[_id] |= Status.ERROR | Status.PAYMENT_FAIL
+            self.running_requests[_id] |= Status.PAYMENT_FAIL
 
     def set_new_state_stock(self, _id, res_obj):
         result = res_obj["res"]
@@ -83,14 +96,16 @@ class Coordinator:
                 self.running_requests[_id] |= Status.STOCK_COMMITTED
         elif result == sc.FAIL:
             print(f"FAIL stock: {_id} for {Status(res_obj['command'])}")
-            self.running_requests[_id] |= Status.ERROR | Status.STOCK_FAIL
+            self.running_requests[_id] |= Status.STOCK_FAIL
 
     def do_next_action(self, _id):
         state = self.running_requests[_id]
-        if state.has_flag(Status.ERROR) and not state.has_flag(Status.ROLLBACK_SENT):
+        if (state.has_flag(Status.STOCK_ROLLBACK) or state.has_flag(Status.PAYMENT_ROLLBACK)) and not state.has_flag(Status.ROLLBACK_SENT):
             self.communicator.rollback(_id, state.has_flag(Status.PAYMENT_FAIL), state.has_flag(Status.STOCK_FAIL))
-            self.running_requests[_id] |= Status.ROLLBACK_SENT
+            self.running_requests[_id] |= Status.ROLLBACK_SENT | Status.ERROR
             return
+        if state.has_flag(Status.FULL_FAIL):
+            self.running_requests[_id] |= Status.ERROR
         if state.has_flag(Status.FINISHED):
             print(f"FINISHED: {_id}")
             return
@@ -102,8 +117,9 @@ class Coordinator:
     def checkout(self, order_id, item_ids, user_id, amount):
         _id = str(uuid.uuid4())
         self.running_requests[_id] = Status.STARTED
-        self.communicator.start_payment(_id, sc.PaymentRequest(order_id, user_id, amount))
-        self.communicator.start_remove_stock(_id, sc.StockRequest(order_id, item_ids))
+        self.communicator.start_transaction(_id,
+                                            sc.PaymentRequest(order_id, user_id, amount),
+                                            sc.StockRequest(order_id, item_ids))
         return _id
 
     def wait_result(self, _id, timeout=5):
@@ -115,11 +131,11 @@ class Coordinator:
             if _id not in self.running_requests:
                 return result
             if state.has_flag(Status.ERROR | Status.ROLLBACK_SENT):
+                print(f"final state: {self.running_requests[_id]}")
                 break
             if state.has_flag(Status.FINISHED):
                 result = True
                 break
         # TODO: Timeout -> check for any open transactions and roll them back
-        print(f"final state: {self.running_requests[_id]}")
         self.running_requests.pop(_id)
         return result

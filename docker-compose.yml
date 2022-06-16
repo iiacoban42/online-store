@@ -8,7 +8,7 @@ services:
     ports:
       - "8000:80"
 
-  order-service:
+  order-service-0:
     build:
       context: ./
       dockerfile: ./order/Dockerfile
@@ -21,22 +21,46 @@ services:
     ports:
     - "5000:5000"
 
+#  order-service-1:
+#    build:
+#      context: ./
+#      dockerfile: ./order/Dockerfile
+#    image: order:latest
+#    environment:
+#      - GATEWAY_URL=http://gateway:80
+#    command: gunicorn -b 0.0.0.0:5001 app:app
+#    env_file:
+#      - env/order_service.env
+#    ports:
+#      - "5001:5001"
+
   order-db:
     image: postgres
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
 
-  stock-service:
+  stock-service-0:
     build:
       context: ./
       dockerfile: ./stock/Dockerfile
     image: stock:latest
-    command: gunicorn -b 0.0.0.0:5002 app:app
+    command: gunicorn -b 0.0.0.0:7000 app:app
     env_file:
       - env/stock_service.env
     ports:
-      - "5002:5002"
+      - "7000:7000"
+
+#  stock-service-1:
+#    build:
+#      context: ./
+#      dockerfile: ./stock/Dockerfile
+#    image: stock:latest
+#    command: gunicorn -b 0.0.0.0:7001 app:app
+#    env_file:
+#      - env/stock_service.env
+#    ports:
+#      - "7001:7001"
 
   stock-db:
     image: postgres
@@ -45,16 +69,29 @@ services:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
 
-  payment-service:
+  payment-service-0:
     build:
       context: ./
       dockerfile: ./payment/Dockerfile
     image: user:latest
-    command: gunicorn -b 0.0.0.0:5001 app:app
+    command: gunicorn -b 0.0.0.0:6000 app:app
     env_file:
       - env/payment_service.env
     ports:
-      - "5001:5001"
+      - "6000:6000"
+
+#  payment-service-1:
+#    build:
+#      context: ./
+#      dockerfile: ./payment/Dockerfile
+#    image: user:latest
+#    command: gunicorn -b 0.0.0.0:6001 app:app
+#    environment:
+#      - ID=1
+#    env_file:
+#      - env/payment_service.env
+#    ports:
+#      - "6001:6001"
 
   payment-db:
     image: postgres

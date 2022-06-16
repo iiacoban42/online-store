@@ -23,11 +23,11 @@ def order_as_json(order):
 @app.post('/create/<user_id>')
 def create_order(user_id):
     if user_id is not None:
-        request = "http://host.docker.internal:5001/check_user/" + user_id
+        request = "http://gateway:80/payment/check_user/" + user_id
         response = requests.get(request)
 
         content = response.content
-
+        print(content)
         content_as_dict = json.loads(content.decode('utf-8'))
         user_exists = content_as_dict['user_exists']
 
@@ -81,7 +81,7 @@ def find_order(order_id):
         for i in item_ids:
             items += str(i) + ","
         items = items[:len(items) - 1]
-        request = "http://host.docker.internal:5002/calculate_cost/" + items
+        request = "http://gateway:80/stock/calculate_cost/" + items
 
         response = requests.get(request)
 

@@ -1,5 +1,7 @@
+import os
 import sys
 import time
+import uuid
 
 import psycopg2
 from kafka import KafkaProducer, KafkaConsumer
@@ -33,6 +35,7 @@ class _Communicator:
             msg_value = msg.value
             _id = msg_value["_id"]
             msg_command = msg_value["command"]
+            print(f"Message consumed {_id}")
             try:
                 if msg_command == BEGIN_TRANSACTION:
                     msg_obj = msg_value["obj"]
@@ -40,17 +43,20 @@ class _Communicator:
                 elif msg_command == COMMIT_TRANSACTION:
                     self._db_connection.commit_transaction(_id)
                 elif msg_command == ROLLBACK_TRANSACTION:
+                    print(f"{_id} rollback attempt")
                     self._db_connection.rollback_transaction(_id)
+                    print(f"{_id} rollback success")
+                    continue
                 else:
                     self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
-                    return
+                    continue
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, success(_id, msg.value["command"]))
             except psycopg2.Error as e:
-                print(f"--PAYMENT_{_id}--")
-                print(f"PG Error: {e.pgerror}")
-                print(f"Error: {e}")
-                print(f"Message: {msg_value}")
-                print("-----")
+                # print(f"--PAYMENT_{_id}--")
+                # print(f"PG Error: {e.pgerror}")
+                # print(f"Error: {e}")
+                # print(f"Message: {msg_value}")
+                # print("-----")
                 self._payment_producer.send(PAYMENT_RESULTS_TOPIC, fail(_id, msg.value["command"]))
 
 
