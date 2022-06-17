@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: order
-          image: order:latest
+          image: iiacoban42/order:latest
           resources:
             limits:
               memory: "1Gi"
