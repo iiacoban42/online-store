@@ -6,10 +6,10 @@ Basic project structure with Python's Flask and PostgreSQL.
 ### Project structure
 
 * `env`
-    Folder containing the Redis env variables for the docker-compose deployment
+    Folder containing the PostgreSQL env variables for the docker-compose deployment
 
 * `helm-config`
-   Helm chart values for Redis and ingress-nginx
+   Helm chart values for PostgreSQL and ingress-nginx
 
 * `k8s`
     Folder containing the kubernetes deployments, apps and services for the ingress, order, payment and stock services.
