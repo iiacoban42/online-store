@@ -7,9 +7,9 @@ spec:
   selector:
     component: user
   ports:
-    - port: 5000
+    - port: 5300
       name: http
-      targetPort: 5000
+      targetPort: 5300
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -36,15 +36,25 @@ spec:
               memory: "1Gi"
               cpu: "1"
           command: ["gunicorn"]
-          args: ["-b", "0.0.0.0:5000", "app:app"]
+          args: ["-b", "0.0.0.0:5300", "app:app"]
           ports:
-            - containerPort: 5000
+            - containerPort: 5300
           env:
-            - name: REDIS_HOST
-              value: redis-master
-            - name: REDIS_PORT
-              value: '6379'
-            - name: REDIS_PASSWORD
-              value: "redis"
-            - name: REDIS_DB
+            - name: POSTGRES_HOST_1
+              value: payment-db-1
+            - name: POSTGRES_PORT_1
+              value: '5301'
+            - name: POSTGRES_HOST_2
+              value: payment-db-2
+            - name: POSTGRES_PORT_2
+              value: '5302'
+            - name: POSTGRES_HOST_3
+              value: payment-db-3
+            - name: POSTGRES_PORT_3
+              value: '5303'
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: "test123"
+            - name: POSTGRES_DB
               value: "0"

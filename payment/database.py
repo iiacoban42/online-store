@@ -18,22 +18,22 @@ def connect_to_postgres(db_conf):
 class _DatabaseConnection:
     DATABASE_CLIENTS = {
         "5301": {
-            "host": "payment-db-1",
-            "port": "5301",
+            "host": os.environ['POSTGRES_HOST_1'],
+            "port": os.environ['POSTGRES_PORT_1'],
             "database": os.environ['POSTGRES_DB'],
             "user": os.environ['POSTGRES_USER'],
             "password": os.environ['POSTGRES_PASSWORD']
         },
         "5302": {
-            "host": "payment-db-2",
-            "port": "5302",
+            "host": os.environ['POSTGRES_HOST_2'],
+            "port": os.environ['POSTGRES_PORT_2'],
             "database": os.environ['POSTGRES_DB'],
             "user": os.environ['POSTGRES_USER'],
             "password": os.environ['POSTGRES_PASSWORD']
         },
         "5303": {
-            "host": "payment-db-3",
-            "port": "5303",
+            "host": os.environ['POSTGRES_HOST_3'],
+            "port": os.environ['POSTGRES_PORT_3'],
             "database": os.environ['POSTGRES_DB'],
             "user": os.environ['POSTGRES_USER'],
             "password": os.environ['POSTGRES_PASSWORD']

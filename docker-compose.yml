@@ -17,9 +17,7 @@ services:
       - GATEWAY_URL=http://gateway:80
     command: gunicorn -b 0.0.0.0:5100 app:app
     env_file:
-      - env/order_service_1.env
-      - env/order_service_2.env
-      - env/order_service_3.env
+      - env/order_service.env
     ports:
       - "5100:5100"
     extra_hosts:
@@ -59,9 +57,7 @@ services:
     image: stock:latest
     command: gunicorn -b 0.0.0.0:5200 app:app
     env_file:
-      - env/stock_service_1.env
-      # - env/stock_service_2.env
-      # - env/stock_service_3.env
+      - env/stock_service.env
     ports:
       - "5200:5200"
     extra_hosts:
@@ -101,9 +97,7 @@ services:
     image: user:latest
     command: gunicorn -b 0.0.0.0:5300 app:app
     env_file:
-      - env/payment_service_1.env
-      - env/payment_service_2.env
-      - env/payment_service_3.env
+      - env/payment_service.env
     ports:
       - "5300:5300"
     extra_hosts:

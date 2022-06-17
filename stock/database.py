@@ -13,8 +13,8 @@ import psycopg2
 
 class _DatabaseConnection:
     def __init__(self):
-        self.db = psycopg2.connect(host="order-db-1",
-                                   port=5101,
+        self.db = psycopg2.connect(host="stock-db-1",
+                                   port=5201,
                                    user="postgres",
                                    password="test123",
                                    database=0)
