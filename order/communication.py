@@ -21,7 +21,6 @@ class _Communicator:
             diff = list(set(TOPICS) - set())
             r = [NewTopic(x, NUMBER_OF_PARTITIONS, 1) for x in diff]
             client.create_topics(new_topics=r)
-            print(f"Created topics: {diff}")
 
         self._transaction_producer = KafkaProducer(
             bootstrap_servers="kafka:9092",
@@ -51,8 +50,6 @@ class _Communicator:
             value_deserializer=lambda x: json.loads(x)
         )
 
-        print(f"PAY PARTS: {_payment_consumer.partitions_for_topic(PAYMENT_REQUEST_TOPIC)}")
-        print(f"STOCK PARTS: {_payment_consumer.partitions_for_topic(STOCK_REQUEST_TOPIC)}")
         self._transaction_producer.send(
             PAYMENT_REQUEST_TOPIC,
             value=command(_id, BEGIN_TRANSACTION, payment_request),

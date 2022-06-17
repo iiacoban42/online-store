@@ -132,8 +132,8 @@ class TestMicroservices(unittest.TestCase):
         stock: int = tu.find_item(item_id1)['stock']
         self.assertEqual(stock, 15)
 
-        checkout_response = tu.checkout_order(order_id).status_code
-        self.assertTrue(tu.status_code_is_success(checkout_response))
+        checkout_response = tu.checkout_order(order_id)
+        self.assertTrue(tu.status_code_is_success(checkout_response.status_code))
 
         stock_after_subtract: int = tu.find_item(item_id1)['stock']
         self.assertEqual(stock_after_subtract, 14)

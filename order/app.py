@@ -1,4 +1,6 @@
 import collections
+import uuid
+
 import requests
 import json
 from flask import Flask
@@ -12,10 +14,10 @@ coordinator = Coordinator()
 
 def order_as_json(order):
     return {
-        "order_id": order[0],
+        "order_id": str(order[0]),
         "paid": order[1],
-        "items": order[2],
-        "user_id": order[3],
+        "items": [str(x) for x in order[2]],
+        "user_id": str(order[3]),
         "total_cost": order[4]
     }
 
@@ -75,17 +77,11 @@ def find_order(order_id):
     available_stock = []
 
     if item_ids:
-
-        items = ""
-        for i in item_ids:
-            items += str(i) + ","
-        items = items[:len(items) - 1]
-        request = "http://gateway:80/stock/calculate_cost/" + items
+        request = "http://gateway:80/stock/calculate_cost/" + ','.join(item_ids)
 
         response = requests.get(request)
 
         content = response.content
-
         content_as_dict = json.loads(content.decode('utf-8'))
         cost = content_as_dict['cost']
         available_stock = content_as_dict['available_stock']
@@ -106,7 +102,7 @@ def find_order(order_id):
             items_out_of_stock_values.append(stock)
 
     if filtered_items != item_ids:
-        updated_order = database.update_items(order_id, filtered_items)
+        updated_order = database.update_items(order_id, [uuid.UUID(x) for x in filtered_items])
 
     order_json = order_as_json(updated_order)
 

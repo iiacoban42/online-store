@@ -18,7 +18,7 @@ services:
       - SERVICE_ID=0
     command: gunicorn -b 0.0.0.0:5000 app:app
     env_file:
-      - env/order_service.env
+      - env/order_service-0.env
     depends_on:
       - kafka
     ports:
@@ -34,7 +34,7 @@ services:
       - SERVICE_ID=1
     command: gunicorn -b 0.0.0.0:5001 app:app
     env_file:
-      - env/order_service-1.env
+      - env/order_service-0.env
     depends_on:
       - order-service-0
     ports:
@@ -50,7 +50,7 @@ services:
       - SERVICE_ID=2
     command: gunicorn -b 0.0.0.0:5002 app:app
     env_file:
-      - env/order_service.env
+      - env/order_service-0.env
     depends_on:
       - order-service-0
     ports:
@@ -66,17 +66,38 @@ services:
       - SERVICE_ID=3
     command: gunicorn -b 0.0.0.0:5003 app:app
     env_file:
-      - env/order_service.env
+      - env/order_service-0.env
     depends_on:
       - order-service-0
     ports:
       - "5003:5003"
 
-  order-db:
+  order-db-0:
     image: postgres
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
+    ports:
+      - "5101:5101"
+    command: -p 5101
+
+  order-db-1:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "5102:5102"
+    command: -p 5102
+
+  order-db-2:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "5103:5103"
+    command: -p 5103
 
   stock-service-0:
     build:
@@ -87,7 +108,7 @@ services:
       - SERVICE_ID=0
     command: gunicorn -b 0.0.0.0:7000 app:app
     env_file:
-      - env/stock_service.env
+      - env/stock_service-0.env
     depends_on:
       - order-service-0
     ports:
@@ -102,7 +123,7 @@ services:
       - SERVICE_ID=1
     command: gunicorn -b 0.0.0.0:7001 app:app
     env_file:
-      - env/stock_service.env
+      - env/stock_service-0.env
     depends_on:
       - order-service-0
     ports:
@@ -117,7 +138,7 @@ services:
       - SERVICE_ID=3
     command: gunicorn -b 0.0.0.0:7002 app:app
     env_file:
-      - env/stock_service.env
+      - env/stock_service-0.env
     depends_on:
       - order-service-0
     ports:
@@ -132,18 +153,38 @@ services:
       - SERVICE_ID=2
     command: gunicorn -b 0.0.0.0:7003 app:app
     env_file:
-      - env/stock_service.env
+      - env/stock_service-0.env
     depends_on:
       - order-service-0
     ports:
       - "7003:7003"
 
-  stock-db:
+  stock-db-0:
     image: postgres
-    command: postgres --max_prepared_transactions=100
+    command: postgres -p 7101 --max_prepared_transactions=100
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
+    ports:
+      - "7101:7101"
+
+  stock-db-1:
+    image: postgres
+    command: postgres -p 7102 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "7102:7102"
+
+  stock-db-2:
+    image: postgres
+    command: postgres -p 7103 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "7103:7103"
 
   payment-service-0:
     build:
@@ -154,7 +195,7 @@ services:
       - SERVICE_ID=0
     command: gunicorn -b 0.0.0.0:6000 app:app
     env_file:
-      - env/payment_service.env
+      - env/payment_service-0.env
     depends_on:
       - order-service-0
     ports:
@@ -169,7 +210,7 @@ services:
     environment:
       - SERVICE_ID=1
     env_file:
-      - env/payment_service.env
+      - env/payment_service-0.env
     depends_on:
       - order-service-0
     ports:
@@ -184,7 +225,7 @@ services:
     environment:
       - SERVICE_ID=2
     env_file:
-      - env/payment_service.env
+      - env/payment_service-0.env
     depends_on:
       - order-service-0
     ports:
@@ -199,18 +240,38 @@ services:
     environment:
       - SERVICE_ID=3
     env_file:
-      - env/payment_service.env
+      - env/payment_service-0.env
     depends_on:
       - order-service-0
     ports:
       - "6003:6003"
 
-  payment-db:
+  payment-db-0:
     image: postgres
-    command: postgres --max_prepared_transactions=100
+    command: postgres -p 6101 --max_prepared_transactions=100
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
+    ports:
+      - "6101:6101"
+
+  payment-db-1:
+    image: postgres
+    command: postgres -p 6102 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "6102:6102"
+
+  payment-db-2:
+    image: postgres
+    command: postgres -p 6103 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "6103:6103"
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -226,11 +287,6 @@ services:
       - zookeeper
     ports:
       - "29092:29092"
-    healthcheck:
-      test: [ "CMD", "kafka-topics.sh", "--list", "--zookeeper", "zookeeper:2181"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181

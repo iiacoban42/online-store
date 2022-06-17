@@ -62,7 +62,7 @@ def remove_stock(item_id: str, amount: int):
 @app.get('/calculate_cost/<item_ids>')
 def calculate_cost(item_ids: str):
     items = item_ids.split(",")
-    items = list(map(int, items))
+    items = list(map(str, items))
     cost, available_stock = database.calculate_cost(items)
     if cost is None:
         return f"Items: {item_ids} not found.", 400

@@ -11,8 +11,8 @@ import psycopg2
 
 class _DatabaseConnection:
     def __init__(self):
-        self.db = psycopg2.connect(host=os.environ['POSTGRES_HOST'],
-                                   port=int(os.environ['POSTGRES_PORT']),
+        self.db = psycopg2.connect(host=os.environ['POSTGRES_HOST_0'],
+                                   port=int(os.environ['POSTGRES_PORT_0']),
                                    user=os.environ['POSTGRES_USER'],
                                    password=os.environ['POSTGRES_PASSWORD'],
                                    database=int(os.environ['POSTGRES_DB']))
