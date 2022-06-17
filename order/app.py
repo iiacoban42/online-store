@@ -137,7 +137,7 @@ def find_order(order_id):
             items_out_of_stock_values.append(stock)
 
     if filtered_items != item_ids:
-        updated_order = database.update_items(order_id, filtered_items)
+        updated_order = database.update_items(order_id, filtered_items, node)
 
     order_json = order_as_json(updated_order)
 
