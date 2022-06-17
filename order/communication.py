@@ -37,7 +37,7 @@ class _Communicator:
     def start_payment(self, _id, payment_request: PaymentRequest, user_id):
         self._payment_producer.send(
             PAYMENT_REQUEST_TOPIC,
-            value=command(_id, BEGIN_TRANSACTION, payment_request, user_id)
+            value=command(_id, BEGIN_TRANSACTION, payment_request, shard_attr=user_id)
         )
 
     def start_remove_stock(self, _id, stock_request: StockRequest):
@@ -46,28 +46,31 @@ class _Communicator:
             value=command(_id, BEGIN_TRANSACTION, stock_request)
         )
 
-    def commit_transaction(self, _id, user_id):
+    def commit_transaction_payment(self, _id, user_id):
+        print(f"ORDER: sending commit transaction to payment, {_id} {user_id}")
         self._payment_producer.send(
             PAYMENT_REQUEST_TOPIC,
-            value=command(_id, COMMIT_TRANSACTION, user_id)
+            value=command(_id, COMMIT_TRANSACTION, shard_attr=user_id)
         )
 
+    def commit_transaction_stock(self, _id):
         self._stock_producer.send(
             STOCK_REQUEST_TOPIC,
             value=command(_id, COMMIT_TRANSACTION)
         )
 
-    def rollback(self, _id, payment, stock, user_id):
+    def rollback_payment(self, _id, payment, user_id):
+        print(f"ROLLBACK PAYMENT: {_id}")
+        self._payment_producer.send(
+            PAYMENT_REQUEST_TOPIC,
+            value=command(_id, ROLLBACK_TRANSACTION, shard_attr=user_id)
+        )
+
+    def rollback_stock(self, stock, _id):
         print(f"ROLLBACK STOCK: {_id}")
         self._stock_producer.send(
             STOCK_REQUEST_TOPIC,
             value=command(_id, ROLLBACK_TRANSACTION)
-        )
-
-        print(f"ROLLBACK PAYMENT: {_id}")
-        self._payment_producer.send(
-            PAYMENT_REQUEST_TOPIC,
-            value=command(_id, ROLLBACK_TRANSACTION, user_id)
         )
 
 

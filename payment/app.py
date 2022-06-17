@@ -12,7 +12,6 @@ import os
 
 app = Flask("payment-service")
 database = attempt_connect()
-database = attempt_connect()
 communicator = communication.try_connect()
 
 threading.Thread(target=lambda: communicator.start_listening()).start()

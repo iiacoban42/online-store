@@ -32,7 +32,7 @@ services:
       POSTGRES_DB: 0
     ports:
       - 5101:5101
-    command: -p 5101
+    command: -p 5101 --max_prepared_transactions=100
 
   order-db-2:
     image: postgres
@@ -41,7 +41,7 @@ services:
       POSTGRES_DB: 0
     ports:
       - 5102:5102
-    command: -p 5102
+    command: -p 5102 --max_prepared_transactions=100
 
   order-db-3:
     image: postgres
@@ -50,7 +50,7 @@ services:
       POSTGRES_DB: 0
     ports:
       - 5103:5103
-    command: -p 5103
+    command: -p 5103 --max_prepared_transactions=100
 
   stock-service:
     build:

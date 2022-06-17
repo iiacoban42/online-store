@@ -171,7 +171,8 @@ def checkout(order_id):
 
     if coordinator.wait_result(req_id):
         order_json["paid"] = True
-        database.update_payment_status(order_id, True)
+        node = get_shard(order_id)
+        database.update_payment_status(order_id, True, node)
         return f"Success. Order {order_id} was placed.", 200
     else:
         return f"Checkout for {order_id} failed.", 400

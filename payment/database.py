@@ -115,6 +115,7 @@ class _DatabaseConnection:
     def prepare_payment(self, xid, user_id, order_id, amount, node):
         try:
             self.db[node].tpc_begin(xid)
+            print(f"PAYMENT DB: tpc begin with id {xid} {type(xid)} {node} {type(node)}")
             cursor = self.cursor(node)
             cursor.execute(payment_insert_script, (user_id, order_id, amount))
             cursor.execute(user_remove_credit_script, (amount, user_id))
@@ -125,6 +126,7 @@ class _DatabaseConnection:
             self.db[node].reset()
 
     def commit_transaction(self, xid, node):
+        print(f"PAYMENT DB: tpc commit with id {xid} {type(xid)} {node} {type(node)}")
         self.db[node].tpc_commit(xid)
 
     def rollback_transaction(self, xid, node):
