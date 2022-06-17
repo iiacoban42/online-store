@@ -167,6 +167,27 @@ def checkout(order_id):
         print(f"Items: {items_out_of_stock} do not have enough stock available.")
         return f"Items: {items_out_of_stock} do not have enough stock available.", 400
 
+    user_id = order_json["user_id"]
+
+    request = "http://host.docker.internal:5300/find_user/" + str(user_id)
+
+    response = requests.get(request)
+
+    if response.status_code == 404:
+        print(f"User {user_id} does not exist.")
+        return f"User {user_id} does not exist.", 400
+
+    content = response.content
+
+    content_as_dict = json.loads(content.decode('utf-8'))
+
+    user_credit = content_as_dict["credit"]
+    order_cost = order_json["total_cost"]
+
+    if user_credit < order_cost:
+        print(f"User {user_id} does not have enough credit ({user_credit}) for this order({order_cost}).")
+        return f"User {user_id} does not have enough credit ({user_credit}) for this order({order_cost}).", 400
+
     req_id = coordinator.checkout(order_id, item_ids, order_json["user_id"], order_json["total_cost"])
 
     if coordinator.wait_result(req_id):
