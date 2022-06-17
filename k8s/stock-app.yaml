@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: stock
-          image: stock:latest
+          image: iiacoban42/stock:latest
           resources:
             limits:
               memory: "1Gi"

@@ -13,11 +13,11 @@ import psycopg2
 
 class _DatabaseConnection:
     def __init__(self):
-        self.db = psycopg2.connect(host="stock-db-1",
-                                   port=5201,
-                                   user="postgres",
-                                   password="test123",
-                                   database=0)
+        self.db = psycopg2.connect(host=os.environ['POSTGRES_HOST_1'],
+                                   port=int(os.environ['POSTGRES_PORT_1']),
+                                   user=os.environ['POSTGRES_USER'],
+                                   password=os.environ['POSTGRES_PASSWORD'],
+                                   database=int(os.environ['POSTGRES_DB']))
         self._create_db()
         atexit.register(self._close_db_connection)
 
