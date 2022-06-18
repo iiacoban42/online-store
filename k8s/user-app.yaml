@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-service-1
+  name: user-service
 spec:
   type: ClusterIP
   selector:
     component: user
   ports:
-    - port: 6001
+    - port: 5000
       name: http
-      targetPort: 6001
+      targetPort: 5000
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: user
-          image: bobdetest123/orderserivce:user
+          image: user:latest
           resources:
             limits:
               memory: "1Gi"
@@ -36,19 +36,15 @@ spec:
               memory: "1Gi"
               cpu: "1"
           command: ["gunicorn"]
-          args: ["-b", "0.0.0.0:6001", "app:app"]
+          args: ["-b", "0.0.0.0:5000", "app:app"]
           ports:
-            - containerPort: 6001
+            - containerPort: 5000
           env:
-            - name: POSTGRES_HOST_0
-              value: payment-db-0
-            - name: POSTGRES_PORT_0
-              value: '6101'
-            - name: POSTGRES_USER
-              value: postgres
-            - name: POSTGRES_PASSWORD
-              value: "test123"
-            - name: POSTGRES_DB
-              value: "0"
-            - name: SERVICE_ID
+            - name: REDIS_HOST
+              value: redis-master
+            - name: REDIS_PORT
+              value: '6379'
+            - name: REDIS_PASSWORD
+              value: "redis"
+            - name: REDIS_DB
               value: "0"

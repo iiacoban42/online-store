@@ -13,20 +13,20 @@ spec:
           pathType: Prefix
           backend:
             service:
-              name: order-service-0
+              name: order-service
               port:
                 number: 5000
         - path: /stock/?(.*)
           pathType: Prefix
           backend:
             service:
-              name: stock-service-0
+              name: stock-service
               port:
                 number: 7000
         - path: /payment/?(.*)
           pathType: Prefix
           backend:
             service:
-              name: user-service-0
+              name: user-service
               port:
                 number: 6000
