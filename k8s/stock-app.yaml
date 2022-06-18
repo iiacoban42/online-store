@@ -7,44 +7,162 @@ spec:
   selector:
     component: stock
   ports:
-    - port: 5000
+    - port: 7000
       name: http
-      targetPort: 5000
+      targetPort: 7000
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
-  name: stock-deployment
+  name: stock-pod-0
+  labels:
+    component: stock
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      component: stock
-  template:
-    metadata:
-      labels:
-        component: stock
-    spec:
-      containers:
-        - name: stock
-          image: stock:latest
-          resources:
-            limits:
-              memory: "1Gi"
-              cpu: "1"
-            requests:
-              memory: "1Gi"
-              cpu: "1"
-          command: ["gunicorn"]
-          args: ["-b", "0.0.0.0:5000", "app:app"]
-          ports:
-            - containerPort: 5000
-          env:
-            - name: REDIS_HOST
-              value: redis-master
-            - name: REDIS_PORT
-              value: '6379'
-            - name: REDIS_PASSWORD
-              value: "redis"
-            - name: REDIS_DB
-              value: "0"
+    containers:
+      - name: stock
+        image: bobdetest123/orderserivce:stock
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+          requests:
+            memory: "1Gi"
+            cpu: "1"
+        command: ["gunicorn"]
+        args: ["-b", "0.0.0.0:7000", "app:app"]
+        ports:
+          - containerPort: 7000
+        env:
+          - name: POSTGRES_HOST_0
+            value: stock-db-0-postgresql
+          - name: POSTGRES_PORT_0
+            value: "5432"
+          - name: POSTGRES_PORT_1
+            value: "5432"
+          - name: POSTGRES_PORT_2
+            value: "5432"
+          - name: SERVICE_ID
+            value: "0"
+          - name: POSTGRES_USER
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: test123
+          - name: POSTGRES_DB
+            value: "0"
+#---
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  name: stock-pod-1
+#  labels:
+#    component: stock
+#spec:
+#    containers:
+#      - name: stock
+#        image: bobdetest123/orderserivce:stock
+#        resources:
+#          limits:
+#            memory: "1Gi"
+#            cpu: "1"
+#          requests:
+#            memory: "1Gi"
+#            cpu: "1"
+#        command: ["gunicorn"]
+#        args: ["-b", "0.0.0.0:7000", "app:app"]
+#        ports:
+#          - containerPort: 7000
+#        env:
+#          - name: POSTGRES_HOST_0
+#            value: stock-db-0-postgresql
+#          - name: POSTGRES_PORT_0
+#            value: "5432"
+#          - name: POSTGRES_PORT_1
+#            value: "5432"
+#          - name: POSTGRES_PORT_2
+#            value: "5432"
+#          - name: SERVICE_ID
+#            value: "1"
+#          - name: POSTGRES_USER
+#            value: postgres
+#          - name: POSTGRES_PASSWORD
+#            value: test123
+#          - name: POSTGRES_DB
+#            value: "0"
+#---
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  name: stock-pod-2
+#  labels:
+#    component: stock
+#spec:
+#    containers:
+#      - name: stock
+#        image: bobdetest123/orderserivce:stock
+#        resources:
+#          limits:
+#            memory: "1Gi"
+#            cpu: "1"
+#          requests:
+#            memory: "1Gi"
+#            cpu: "1"
+#        command: ["gunicorn"]
+#        args: ["-b", "0.0.0.0:7000", "app:app"]
+#        ports:
+#          - containerPort: 7000
+#        env:
+#          - name: POSTGRES_HOST_0
+#            value: stock-db-0-postgresql
+#          - name: POSTGRES_PORT_0
+#            value: "5432"
+#          - name: POSTGRES_PORT_1
+#            value: "5432"
+#          - name: POSTGRES_PORT_2
+#            value: "5432"
+#          - name: SERVICE_ID
+#            value: "2"
+#          - name: POSTGRES_USER
+#            value: postgres
+#          - name: POSTGRES_PASSWORD
+#            value: test123
+#          - name: POSTGRES_DB
+#            value: "0"
+#---
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  name: stock-pod-3
+#  labels:
+#    component: stock
+#spec:
+#    containers:
+#      - name: stock
+#        image: bobdetest123/orderserivce:stock
+#        resources:
+#          limits:
+#            memory: "1Gi"
+#            cpu: "1"
+#          requests:
+#            memory: "1Gi"
+#            cpu: "1"
+#        command: ["gunicorn"]
+#        args: ["-b", "0.0.0.0:7000", "app:app"]
+#        ports:
+#          - containerPort: 7000
+#        env:
+#          - name: POSTGRES_HOST_0
+#            value: stock-db-0-postgresql
+#          - name: POSTGRES_PORT_0
+#            value: "5432"
+#          - name: POSTGRES_PORT_1
+#            value: "5432"
+#          - name: POSTGRES_PORT_2
+#            value: "5432"
+#          - name: SERVICE_ID
+#            value: "3"
+#          - name: POSTGRES_USER
+#            value: postgres
+#          - name: POSTGRES_PASSWORD
+#            value: test123
+#          - name: POSTGRES_DB
+#            value: "0"
