@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-service
+  name: payment-service
 spec:
   type: ClusterIP
   selector:
-    component: user
+    component: payment
   ports:
     - port: 6000
       name: http
@@ -14,13 +14,13 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: user-pod-0
+  name: payment-pod-0
   labels:
-    component: user
+    component: payment
 spec:
     containers:
-      - name: user
-        image: bobdetest123/orderserivce:user
+      - name: payment
+        image: bobdetest123/orderserivce:payment
         resources:
           limits:
             memory: "1Gi"
@@ -34,7 +34,7 @@ spec:
           - containerPort: 6000
         env:
           - name: POSTGRES_HOST_0
-            value: user-db-0-postgresql
+            value: payment-db-0-postgresql
           - name: POSTGRES_PORT_0
             value: "5432"
           - name: POSTGRES_PORT_1
@@ -53,13 +53,13 @@ spec:
 #apiVersion: v1
 #kind: Pod
 #metadata:
-#  name: user-pod-1
+#  name: payment-pod-1
 #  labels:
-#    component: user
+#    component: payment
 #spec:
 #    containers:
-#      - name: user
-#        image: bobdetest123/orderserivce:user
+#      - name: payment
+#        image: bobdetest123/orderserivce:payment
 #        resources:
 #          limits:
 #            memory: "1Gi"
@@ -73,7 +73,7 @@ spec:
 #          - containerPort: 6000
 #        env:
 #          - name: POSTGRES_HOST_0
-#            value: user-db-0-postgresql
+#            value: payment-db-0-postgresql
 #          - name: POSTGRES_PORT_0
 #            value: "5432"
 #          - name: POSTGRES_PORT_1
@@ -92,13 +92,13 @@ spec:
 #apiVersion: v1
 #kind: Pod
 #metadata:
-#  name: user-pod-2
+#  name: payment-pod-2
 #  labels:
-#    component: user
+#    component: payment
 #spec:
 #    containers:
-#      - name: user
-#        image: bobdetest123/orderserivce:user
+#      - name: payment
+#        image: bobdetest123/orderserivce:payment
 #        resources:
 #          limits:
 #            memory: "1Gi"
@@ -112,7 +112,7 @@ spec:
 #          - containerPort: 6000
 #        env:
 #          - name: POSTGRES_HOST_0
-#            value: user-db-0-postgresql
+#            value: payment-db-0-postgresql
 #          - name: POSTGRES_PORT_0
 #            value: "5432"
 #          - name: POSTGRES_PORT_1
@@ -131,13 +131,13 @@ spec:
 #apiVersion: v1
 #kind: Pod
 #metadata:
-#  name: user-pod-3
+#  name: payment-pod-3
 #  labels:
-#    component: user
+#    component: payment
 #spec:
 #    containers:
-#      - name: user
-#        image: bobdetest123/orderserivce:user
+#      - name: payment
+#        image: bobdetest123/orderserivce:payment
 #        resources:
 #          limits:
 #            memory: "1Gi"
@@ -151,7 +151,7 @@ spec:
 #          - containerPort: 6000
 #        env:
 #          - name: POSTGRES_HOST_0
-#            value: user-db-0-postgresql
+#            value: payment-db-0-postgresql
 #          - name: POSTGRES_PORT_0
 #            value: "5432"
 #          - name: POSTGRES_PORT_1
