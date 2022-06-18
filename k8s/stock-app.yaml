@@ -7,9 +7,9 @@ spec:
   selector:
     component: stock
   ports:
-    - port: 5200
+    - port: 7000
       name: http
-      targetPort: 5200
+      targetPort: 7000
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -36,14 +36,14 @@ spec:
               memory: "1Gi"
               cpu: "1"
           command: ["gunicorn"]
-          args: ["-b", "0.0.0.0:5200", "app:app"]
+          args: ["-b", "0.0.0.0:7000", "app:app"]
           ports:
-            - containerPort: 5200
+            - containerPort: 7000
           env:
-            - name: POSTGRES_HOST_1
-              value: stock-db-1
-            - name: POSTGRES_PORT_1
-              value: '5201'
+            - name: POSTGRES_HOST_0
+              value: stock-db-0
+            - name: POSTGRES_PORT_0
+              value: '7101'
             - name: POSTGRES_USER
               value: postgres
             - name: POSTGRES_PASSWORD
