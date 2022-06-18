@@ -6,4 +6,3 @@ cd k8s
 kubectl apply -f .
 cd ..
 eval $(minikube -p minikube docker-env)
-docker-compose up --build

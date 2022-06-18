@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: stock-service
+  name: stock-service-0
 spec:
   type: ClusterIP
   selector:
@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: stock
-          image: iiacoban42/stock:latest
+          image: bobdetest123/orderserivce:stock
           resources:
             limits:
               memory: "1Gi"

@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-service-0
+  name: user-service-1
 spec:
   type: ClusterIP
   selector:
     component: user
   ports:
-    - port: 6000
+    - port: 6001
       name: http
-      targetPort: 6000
+      targetPort: 6001
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -36,9 +36,9 @@ spec:
               memory: "1Gi"
               cpu: "1"
           command: ["gunicorn"]
-          args: ["-b", "0.0.0.0:6000", "app:app"]
+          args: ["-b", "0.0.0.0:6001", "app:app"]
           ports:
-            - containerPort: 6000
+            - containerPort: 6001
           env:
             - name: POSTGRES_HOST_0
               value: payment-db-0
