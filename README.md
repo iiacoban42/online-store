@@ -50,17 +50,13 @@ Run the following for a first time setup (or `./setup-minikube.sh`) and run `min
 minikube start
 minikube addons enable ingress
 ./deploy-charts-minikube.sh
-cd k8s
-kubectl apply -f .
-cd ..
-eval $(minikube -p minikube docker-env)
-docker-compose up --build
+kubectl apply -f ./k8s
 ```
 
 The images of each service are also on dockerhub:
-- order: https://hub.docker.com/repository/docker/iiacoban42/order
-- user: https://hub.docker.com/repository/docker/iiacoban42/user
-- stock: https://hub.docker.com/repository/docker/iiacoban42/stock
+- bobdetest123/orderserivce:order
+- bobdetest123/orderserivce:payment
+- bobdetest123/orderserivce:stock
 
 #### kubernetes cluster (managed k8s cluster in the cloud)
 
