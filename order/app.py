@@ -1,4 +1,5 @@
 import collections
+import os
 import uuid
 
 import requests
@@ -25,7 +26,7 @@ def order_as_json(order):
 @app.post('/create/<user_id>')
 def create_order(user_id):
     if user_id is not None:
-        request = "http://gateway:80/payment/check_user/" + user_id
+        request = f"{os.environ['GATEWAY_URL']}/payment/check_user/" + user_id
         response = requests.get(request)
 
         content = response.content
@@ -77,7 +78,7 @@ def find_order(order_id):
     available_stock = []
 
     if item_ids:
-        request = "http://gateway:80/stock/calculate_cost/" + ','.join(item_ids)
+        request = f"{os.environ['GATEWAY_URL']}/stock/calculate_cost/" + ','.join(item_ids)
 
         response = requests.get(request)
 

@@ -76,7 +76,7 @@ def payment_status(user_id: str, order_id: str):
            }, 200
 
 
-@app.get('/check_user/<user_id>/')
+@app.get('/check_user/<user_id>')
 def check_user(user_id: str):
     user = database.check_user(user_id)
     return {"user_exists": user}, 200

@@ -4,8 +4,6 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
 
-helm install -f helm-config/nginx-helm-values.yaml nginx ingress-nginx/ingress-nginx
-
 helm install -f helm-config/postgres-helm-values.yaml order-db-0 bitnami/postgresql
 helm install -f helm-config/postgres-helm-values.yaml order-db-1 bitnami/postgresql
 helm install -f helm-config/postgres-helm-values.yaml order-db-2 bitnami/postgresql
