@@ -1,17 +1,3 @@
 auth:
-  password: postgres
-master:
-  persistence:
-    size: 4Gi
-  resources:
-    requests:
-      memory: 4Gi
-      cpu: 2
-replica:
-  replicaCount: 1
-  persistence:
-    size: 4Gi
-  resources:
-    requests:
-      memory: 4Gi
-      cpu: 2
+  postgresPassword: "test123"
+  database: "0"
