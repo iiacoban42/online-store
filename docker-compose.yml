@@ -8,20 +8,78 @@ services:
     ports:
       - "8000:80"
 
-  order-service:
+  order-service-0:
     build:
       context: ./
       dockerfile: ./order/Dockerfile
     image: order:latest
     environment:
       - GATEWAY_URL=http://gateway:80
-    command: gunicorn -b 0.0.0.0:5100 app:app
+      - SERVICE_ID=0
+    command: gunicorn -b 0.0.0.0:5000 app:app
     env_file:
-      - env/order_service.env
+      - env/order_service-0.env
+    depends_on:
+      - kafka
     ports:
-      - "5100:5100"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    - "5000:5000"
+
+  order-service-1:
+    build:
+      context: ./
+      dockerfile: ./order/Dockerfile
+    image: order:latest
+    environment:
+      - GATEWAY_URL=http://gateway:80
+      - SERVICE_ID=1
+    command: gunicorn -b 0.0.0.0:5001 app:app
+    env_file:
+      - env/order_service-0.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "5001:5001"
+
+  order-service-2:
+    build:
+      context: ./
+      dockerfile: ./order/Dockerfile
+    image: order:latest
+    environment:
+      - GATEWAY_URL=http://gateway:80
+      - SERVICE_ID=2
+    command: gunicorn -b 0.0.0.0:5002 app:app
+    env_file:
+      - env/order_service-0.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "5002:5002"
+
+  order-service-3:
+    build:
+      context: ./
+      dockerfile: ./order/Dockerfile
+    image: order:latest
+    environment:
+      - GATEWAY_URL=http://gateway:80
+      - SERVICE_ID=3
+    command: gunicorn -b 0.0.0.0:5003 app:app
+    env_file:
+      - env/order_service-0.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "5003:5003"
+
+  order-db-0:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "5101:5101"
+    command: -p 5101
 
   order-db-1:
     image: postgres
@@ -29,8 +87,8 @@ services:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
     ports:
-      - 5101:5101
-    command: -p 5101 --max_prepared_transactions=100
+      - "5102:5102"
+    command: -p 5102
 
   order-db-2:
     image: postgres
@@ -38,105 +96,190 @@ services:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
     ports:
-      - 5102:5102
-    command: -p 5102 --max_prepared_transactions=100
+      - "5103:5103"
+    command: -p 5103
 
-  order-db-3:
-    image: postgres
-    environment:
-      POSTGRES_PASSWORD: test123
-      POSTGRES_DB: 0
-    ports:
-      - 5103:5103
-    command: -p 5103 --max_prepared_transactions=100
-
-  stock-service:
+  stock-service-0:
     build:
       context: ./
       dockerfile: ./stock/Dockerfile
     image: stock:latest
-    command: gunicorn -b 0.0.0.0:5200 app:app
+    environment:
+      - SERVICE_ID=0
+    command: gunicorn -b 0.0.0.0:7000 app:app
     env_file:
-      - env/stock_service.env
+      - env/stock_service-0.env
+    depends_on:
+      - order-service-0
     ports:
-      - "5200:5200"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "7000:7000"
 
-  stock-db-1:
+  stock-service-1:
+    build:
+      context: ./
+      dockerfile: ./stock/Dockerfile
+    image: stock:latest
+    environment:
+      - SERVICE_ID=1
+    command: gunicorn -b 0.0.0.0:7001 app:app
+    env_file:
+      - env/stock_service-0.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "7001:7001"
+
+  stock-service-2:
+    build:
+      context: ./
+      dockerfile: ./stock/Dockerfile
+    image: stock:latest
+    environment:
+      - SERVICE_ID=3
+    command: gunicorn -b 0.0.0.0:7002 app:app
+    env_file:
+      - env/stock_service-0.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "7002:7002"
+
+  stock-service-3:
+    build:
+      context: ./
+      dockerfile: ./stock/Dockerfile
+    image: stock:latest
+    environment:
+      - SERVICE_ID=2
+    command: gunicorn -b 0.0.0.0:7003 app:app
+    env_file:
+      - env/stock_service-0.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "7003:7003"
+
+  stock-db-0:
     image: postgres
-    command: postgres -p 5201 --max_prepared_transactions=100
+    command: postgres -p 7101 --max_prepared_transactions=100
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
     ports:
-      - 5201:5201
+      - "7101:7101"
 
-  # stock-db-2:
-  #   image: postgres
-  #   command: postgres -p 5202 --max_prepared_transactions=100
-  #   environment:
-  #     POSTGRES_PASSWORD: test123
-  #     POSTGRES_DB: 0
-  #   ports:
-  #     - 5202:5202
+  stock-db-1:
+    image: postgres
+    command: postgres -p 7102 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "7102:7102"
 
-  # stock-db-3:
-  #   image: postgres
-  #   command: postgres -p 5203 --max_prepared_transactions=100
-  #   environment:
-  #     POSTGRES_PASSWORD: test123
-  #     POSTGRES_DB: 0
-  #   ports:
-  #     - 5203:5203
+  stock-db-2:
+    image: postgres
+    command: postgres -p 7103 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "7103:7103"
 
-  payment-service:
+  payment-service-0:
     build:
       context: ./
       dockerfile: ./payment/Dockerfile
     image: user:latest
-    command: gunicorn -b 0.0.0.0:5300 app:app
+    environment:
+      - SERVICE_ID=0
+    command: gunicorn -b 0.0.0.0:6000 app:app
     env_file:
-      - env/payment_service.env
+      - env/payment_service-0.env
+    depends_on:
+      - order-service-0
     ports:
-      - "5300:5300"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "6000:6000"
+
+  payment-service-1:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    image: user:latest
+    command: gunicorn -b 0.0.0.0:6001 app:app
+    environment:
+      - SERVICE_ID=1
+    env_file:
+      - env/payment_service-0.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "6001:6001"
+
+  payment-service-2:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    image: user:latest
+    command: gunicorn -b 0.0.0.0:6002 app:app
+    environment:
+      - SERVICE_ID=2
+    env_file:
+      - env/payment_service-0.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "6002:6002"
+
+  payment-service-3:
+    build:
+      context: ./
+      dockerfile: ./payment/Dockerfile
+    image: user:latest
+    command: gunicorn -b 0.0.0.0:6003 app:app
+    environment:
+      - SERVICE_ID=3
+    env_file:
+      - env/payment_service-0.env
+    depends_on:
+      - order-service-0
+    ports:
+      - "6003:6003"
+
+  payment-db-0:
+    image: postgres
+    command: postgres -p 6101 --max_prepared_transactions=100
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: 0
+    ports:
+      - "6101:6101"
 
   payment-db-1:
     image: postgres
-    command: postgres -p 5301 --max_prepared_transactions=100
+    command: postgres -p 6102 --max_prepared_transactions=100
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
     ports:
-      - 5301:5301
+      - "6102:6102"
 
   payment-db-2:
     image: postgres
-    command: postgres -p 5302 --max_prepared_transactions=100
+    command: postgres -p 6103 --max_prepared_transactions=100
     environment:
       POSTGRES_PASSWORD: test123
       POSTGRES_DB: 0
     ports:
-      - 5302:5302
-
-  payment-db-3:
-    image: postgres
-    command: postgres -p 5303 --max_prepared_transactions=100
-    environment:
-      POSTGRES_PASSWORD: test123
-      POSTGRES_DB: 0
-    ports:
-      - 5303:5303
+      - "6103:6103"
 
   zookeeper:
-   image: confluentinc/cp-zookeeper:latest
-   environment:
-     ZOOKEEPER_CLIENT_PORT: 2181
-     ZOOKEEPER_TICK_TIME: 2000
-   ports:
-     - "22181:2181"
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "22181:2181"
 
   kafka:
     image: confluentinc/cp-kafka:latest

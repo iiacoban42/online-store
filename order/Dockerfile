@@ -14,4 +14,4 @@ RUN apt-get update \
 COPY ./order .
 COPY ./shared ./shared
 
-EXPOSE 5100
+EXPOSE 5000

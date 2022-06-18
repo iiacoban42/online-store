@@ -4,7 +4,8 @@ import time
 import uuid
 
 import psycopg2
-from kafka import KafkaProducer, KafkaConsumer
+from kafka import KafkaProducer, KafkaConsumer, KafkaAdminClient, TopicPartition
+from kafka.admin import NewPartitions
 from kafka.errors import NoBrokersAvailable
 
 from shared.communication import *
@@ -29,7 +30,9 @@ class _Communicator:
             client_id="stock_service",
             value_deserializer=lambda x: json.loads(x)
         )
-        self._stock_consumer.subscribe([STOCK_REQUEST_TOPIC])
+
+        time.sleep(3)
+        self._stock_consumer.assign([TopicPartition(STOCK_REQUEST_TOPIC, get_service_id())])
         self._db_connection = attempt_connect()
 
     def start_listening(self):
@@ -52,16 +55,19 @@ class _Communicator:
                     print(f"{_id} rollback success")
                     continue
                 else:
-                    self._stock_producer.send(STOCK_RESULTS_TOPIC, fail(_id, msg.value["command"]))
+                    self._stock_producer.send(STOCK_RESULTS_TOPIC, fail(_id, msg.value["command"]),
+                                              partition=get_service_id())
                     continue
-                self._stock_producer.send(STOCK_RESULTS_TOPIC, success(_id, msg.value["command"]))
+                self._stock_producer.send(STOCK_RESULTS_TOPIC, success(_id, msg.value["command"]),
+                                          partition=get_service_id())
             except psycopg2.Error as e:
                 # print(f"--STOCK_{_id}--")
                 # print(f"PG Error: {e.pgerror}")
                 # print(f"Error: {e}")
                 # print(f"Message: {msg_value}")
                 # print("-----")
-                self._stock_producer.send(STOCK_RESULTS_TOPIC, fail(_id, msg.value["command"]))
+                self._stock_producer.send(STOCK_RESULTS_TOPIC, fail(_id, msg.value["command"]),
+                                          partition=get_service_id())
 
 
 def try_connect(retries=3, timeout=2000) -> _Communicator:

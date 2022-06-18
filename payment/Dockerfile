@@ -14,4 +14,4 @@ RUN apt-get update \
 COPY ./payment .
 COPY ./shared ./shared
 
-EXPOSE 5300
+EXPOSE 5001
