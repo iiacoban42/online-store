@@ -58,3 +58,5 @@ spec:
               value: "test123"
             - name: POSTGRES_DB
               value: "0"
+            - name: SERVICE_ID
+              value: "0"

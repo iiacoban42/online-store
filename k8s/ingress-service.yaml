@@ -15,18 +15,18 @@ spec:
             service:
               name: order-service
               port:
-                number: 5100
+                number: 5000
         - path: /stock/?(.*)
           pathType: Prefix
           backend:
             service:
               name: stock-service
               port:
-                number: 5200
+                number: 7000
         - path: /payment/?(.*)
           pathType: Prefix
           backend:
             service:
               name: user-service
               port:
-                number: 5300
+                number: 6000
