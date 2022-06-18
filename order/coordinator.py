@@ -37,7 +37,6 @@ class Coordinator:
             sc.STOCK_RESULTS_TOPIC: lambda msg: self.handle_stock_result(msg)
         }
 
-        # TODO: Announce yourself -> send message to cancel any open transaction maybe? (for when order crashes)
         threading.Thread(target=lambda: self.listen_results()).start()
 
     def listen_results(self):
@@ -122,6 +121,24 @@ class Coordinator:
                                             sc.StockRequest(order_id, item_ids))
         return _id
 
+    def rollback_open_transactions(self, _id):
+        state = self.running_requests[_id]
+
+        if state.has_flag(Status.ERROR) or state.has_flag(Status.FINISHED):
+            return
+
+        payment_error, stock_error = True
+
+        if state.has_flag(Status.PAYMENT_PREPARED) \
+                and not (state.has_flag(Status.PAYMENT_ROLLBACK) or state.has_flag(Status.PAYMENT_COMMITTED)):
+            payment_error = False
+        if state.has_flag(Status.STOCK_PREPARED) \
+                and not (state.has_flag(Status.STOCK_ROLLBACK) or state.has_flag(Status.STOCK_COMMITTED)):
+            stock_error = False
+
+        if not (payment_error and stock_error):
+            self.communicator.rollback(_id, payment_error, stock_error)
+
     def wait_result(self, _id, timeout=5):
         t_end = time.monotonic() + timeout
         result = False
@@ -136,6 +153,7 @@ class Coordinator:
             if state.has_flag(Status.FINISHED):
                 result = True
                 break
-        # TODO: Timeout -> check for any open transactions and roll them back
+
+        self.rollback_open_transactions(_id)
         self.running_requests.pop(_id)
         return result
