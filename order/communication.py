@@ -16,7 +16,10 @@ class _Communicator:
 
     def __init__(self):
         if get_service_id() == 0:
-            client = KafkaAdminClient(bootstrap_servers='kafka:9092')
+            client = KafkaAdminClient(
+                bootstrap_servers='kafka:9092',
+                api_version=(0, 10, 2)
+            )
             diff = list(set(TOPICS) - set(client.list_topics()))
             r = [NewTopic(x, NUMBER_OF_PARTITIONS, 1) for x in diff]
             client.create_topics(new_topics=r)
