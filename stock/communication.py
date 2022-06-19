@@ -31,7 +31,7 @@ class _Communicator:
             value_deserializer=lambda x: json.loads(x)
         )
 
-        time.sleep(3)
+        time.sleep(20)
         self._stock_consumer.assign([TopicPartition(STOCK_REQUEST_TOPIC, get_service_id())])
         self._db_connection = attempt_connect()
 

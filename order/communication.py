@@ -16,8 +16,10 @@ class _Communicator:
 
     def __init__(self):
         if get_service_id() == 0:
+            print("Attempting kafka connect", flush=True)
             client = KafkaAdminClient(bootstrap_servers='kafka:9092')
-            diff = list(set(TOPICS) - set(client.list_topics()))
+            print(F"ALREADY EXistING TOPICS {client.list_topics()}", flush=True)
+            diff = list(set(TOPICS) - set())
             r = [NewTopic(x, NUMBER_OF_PARTITIONS, 1) for x in diff]
             client.create_topics(new_topics=r)
 
@@ -34,7 +36,7 @@ class _Communicator:
         )
 
         if get_service_id() != 0:
-            time.sleep(3)
+            time.sleep(20)
 
         self._results_consumer.assign([TopicPartition(PAYMENT_RESULTS_TOPIC, get_service_id()),
                                        TopicPartition(STOCK_RESULTS_TOPIC, get_service_id())])

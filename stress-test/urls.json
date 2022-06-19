@@ -1,5 +1,5 @@
 {
-  "ORDER_URL" : "http://127.0.0.1:8000",
-  "PAYMENT_URL" : "http://127.0.0.1:8000",
-  "STOCK_URL" : "http://127.0.0.1:8000"
+  "ORDER_URL" : "http://127.0.0.1:8080",
+  "PAYMENT_URL" : "http://127.0.0.1:8080",
+  "STOCK_URL" : "http://127.0.0.1:8080"
 }

@@ -1,3 +1,5 @@
 auth:
   postgresPassword: "test123"
   database: "0"
+primary:
+  extendedConfiguration: "max_prepared_transactions=100"

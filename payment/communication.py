@@ -28,7 +28,7 @@ class _Communicator:
             client_id="payment_service",
             value_deserializer=lambda x: json.loads(x)
         )
-        time.sleep(3)
+        time.sleep(20)
 
         self._payment_consumer.assign([TopicPartition(PAYMENT_REQUEST_TOPIC, get_service_id())])
         self._db_connection = attempt_connect()

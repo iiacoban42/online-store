@@ -20,7 +20,7 @@ metadata:
 spec:
     containers:
       - name: order
-        image: bobdetest123/orderserivce:order
+        image: bobdetest123/orderserivce:order2
         resources:
           limits:
             memory: "1Gi"
@@ -55,6 +55,8 @@ spec:
             value: "0"
           - name: GATEWAY_URL
             value: "http://192.168.49.2:80"
+          - name: PYTHONUNBUFFERED
+            value: 'false'
 #---
 #apiVersion: v1
 #kind: Pod
