@@ -21,6 +21,7 @@ spec:
     containers:
       - name: stock
         image: bobdetest123/orderserivce:stock
+        imagePullPolicy: Always
         resources:
           limits:
             memory: "1Gi"

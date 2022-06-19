@@ -21,6 +21,7 @@ spec:
     containers:
       - name: payment
         image: bobdetest123/orderserivce:payment
+        imagePullPolicy: Always
         resources:
           limits:
             memory: "1Gi"

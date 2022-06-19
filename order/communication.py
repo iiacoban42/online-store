@@ -1,14 +1,14 @@
 import sys
 import time
 
-from kafka3 import KafkaProducer, KafkaConsumer, TopicPartition
-from kafka3.admin import NewTopic
-from kafka3.errors import NoBrokersAvailable
-from kafka3 import KafkaAdminClient
-from kafka3.admin.new_partitions import NewPartitions
+from kafka import KafkaProducer, KafkaConsumer, TopicPartition
+from kafka.admin import NewTopic
+from kafka.errors import NoBrokersAvailable
+from kafka import KafkaAdminClient
+from kafka.admin.new_partitions import NewPartitions
 import json
 from shared.communication import *
-from kafka3 import KafkaClient
+from kafka import KafkaClient
 
 TOPICS = [PAYMENT_RESULTS_TOPIC, STOCK_RESULTS_TOPIC, PAYMENT_REQUEST_TOPIC, STOCK_REQUEST_TOPIC]
 
