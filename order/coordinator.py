@@ -127,7 +127,8 @@ class Coordinator:
         if state.has_flag(Status.ERROR) or state.has_flag(Status.FINISHED):
             return
 
-        payment_error, stock_error = True
+        payment_error = True
+        stock_error = True
 
         if state.has_flag(Status.PAYMENT_PREPARED) \
                 and not (state.has_flag(Status.PAYMENT_ROLLBACK) or state.has_flag(Status.PAYMENT_COMMITTED)):
