@@ -24,11 +24,11 @@ Cloud application running Stock, Order and Payment microservices, built with Pyt
 * `test`
     Folder containing some basic correctness tests for the entire system.
 
-### Port assignment
+### Port assignments
 
-* `order`:5000
-* `payment`:6000
-* `stock`:7000
+* `order:5000`
+* `payment:6000`
+* `stock:7000`
 
 ### Deployment types:
 
