@@ -22,12 +22,14 @@ class _Communicator:
         self._stock_producer = KafkaProducer(
             bootstrap_servers="kafka:9092",
             client_id="stock_service",
+            api_version=(0, 10, 2),
             value_serializer=lambda x: json.dumps(x).encode('utf-8')
         )
 
         self._stock_consumer = KafkaConsumer(
             bootstrap_servers="kafka:9092",
             client_id="stock_service",
+            api_version=(0, 10, 2),
             value_deserializer=lambda x: json.loads(x)
         )
 
