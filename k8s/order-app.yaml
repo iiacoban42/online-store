@@ -81,11 +81,11 @@ spec:
           - containerPort: 5000
         env:
           - name: POSTGRES_HOST_0
-            value: order-db-0
+            value: order-db-0-postgresql
           - name: POSTGRES_HOST_1
-            value: order-db-1
+            value: order-db-1-postgresql
           - name: POSTGRES_HOST_2
-            value: order-db-2
+            value: order-db-2-postgresql
           - name: POSTGRES_PORT_0
             value: "5432"
           - name: POSTGRES_PORT_1
@@ -126,11 +126,11 @@ spec:
           - containerPort: 5000
         env:
           - name: POSTGRES_HOST_0
-            value: order-db-0
+            value: order-db-0-postgresql
           - name: POSTGRES_HOST_1
-            value: order-db-1
+            value: order-db-1-postgresql
           - name: POSTGRES_HOST_2
-            value: order-db-2
+            value: order-db-2-postgresql
           - name: POSTGRES_PORT_0
             value: "5432"
           - name: POSTGRES_PORT_1
@@ -171,11 +171,11 @@ spec:
           - containerPort: 5000
         env:
           - name: POSTGRES_HOST_0
-            value: order-db-0
+            value: order-db-0-postgresql
           - name: POSTGRES_HOST_1
-            value: order-db-1
+            value: order-db-1-postgresql
           - name: POSTGRES_HOST_2
-            value: order-db-2
+            value: order-db-2-postgresql
           - name: POSTGRES_PORT_0
             value: "5432"
           - name: POSTGRES_PORT_1
